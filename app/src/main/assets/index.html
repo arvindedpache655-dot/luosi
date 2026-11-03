@@ -1,0 +1,3228 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><script data-bard-client-injected="true">(function(firebaseConfig, initialAuthToken, appId) {
+        window.__firebase_config = firebaseConfig;
+        window.__initial_auth_token = initialAuthToken;
+        window.__app_id = appId;
+            })("\n{\n  \"apiKey\": \"AIzaSyCqyCcs2R2e7AegGjvFAwG98wlamtbHvZY\",\n  \"authDomain\": \"bard-frontend.firebaseapp.com\",\n  \"projectId\": \"bard-frontend\",\n  \"storageBucket\": \"bard-frontend.firebasestorage.app\",\n  \"messagingSenderId\": \"175205271074\",\n  \"appId\": \"1:175205271074:web:2b7bd4d34d33bf38e6ec7b\"\n}\n","eyJhbGciOiJSUzI1NiIsImtpZCI6IjExNjRiNzdiNDMzZDdhMDAyMWI4NjE4YjhjYTU3ZTMyZGI5MWUxMTMiLCJ0eXAiOiJKV1QifQ.eyJzdWIiOiJmaXJlYmFzZS1hZG1pbnNkay1mYnN2Y0BiYXJkLWZyb250ZW5kLmlhbS5nc2VydmljZWFjY291bnQuY29tIiwiYXVkIjoiaHR0cHM6Ly9pZGVudGl0eXRvb2xraXQuZ29vZ2xlYXBpcy5jb20vZ29vZ2xlLmlkZW50aXR5LmlkZW50aXR5dG9vbGtpdC52MS5JZGVudGl0eVRvb2xraXQiLCJ1aWQiOiIxNTI5MDUxOTQ2NjgwMzI4NjY2MSIsImlzcyI6ImZpcmViYXNlLWFkbWluc2RrLWZic3ZjQGJhcmQtZnJvbnRlbmQuaWFtLmdzZXJ2aWNlYWNjb3VudC5jb20iLCJjbGFpbXMiOnsiYXBwSWQiOiJjX2FjZWZmODgyYTUzYWZmYjVfc2NyZXdfcHV6emxlX2dhbWUuaHRtbC04MzQifSwiZXhwIjoxNzkzNjkwNDg0LCJpYXQiOjE3OTM2ODY4ODQsImFsZyI6IlJTMjU2In0.kqVp8Inl9ndIS1cdT0JYA4iD84yKxomkW4KVFm38TQs_aiRzOVv8sTdbmWOH0DZK-WwGEnMf7o_yK-t_LTlwLzG4qYeYRm_jOIv3Hj0vyH6SzuE4FlURkuE0jFCORdwemPVhERSsl5pMvotQNqo3dIBFxPE-LyrrnrJK36adarKr9IO05PnFQYh9TEl7gT-jMgU0nZfOgCcJXR31kOToJ_uzNzE0SIKoCxV6tdYU66L9FSM_uVmdWBnYaXdSBf_c8vtUkHr_QEk8VKXEcxvOQ2BZtIOlGDlZ8AlRRue06ihcL4XZZ16r91v4FzCWdFe3hsRJ1-T7T3GTGFki3vjs1w","c_aceff882a53affb5_screw_puzzle_game.html-834")</script><script data-bard-client-injected="true">
+  document.addEventListener('input', (event) => {
+    if (event.target && (event.target.isContentEditable || event.target.hasAttribute('contenteditable'))) {
+      const clonedDoc = document.cloneNode(true);
+      const injectedScripts = clonedDoc.querySelectorAll('[data-bard-client-injected="true"]');
+      injectedScripts.forEach(el => el.remove());
+      window.parent.postMessage({
+        type: 'inlineEdit',
+        html: '<!DOCTYPE html>\n' + clonedDoc.documentElement.outerHTML
+      }, '*');
+    }
+  });
+</script><script data-bard-client-injected="true">(function(){'use strict';window.addEventListener("message",a=>{a.data&&a.data.type==="SUPPLEMENTAL_DATA_UPDATE"&&window.dispatchEvent(new CustomEvent("supplementaldataupdate",{detail:a.data.data}))});}).call(this);
+</script><script data-bard-client-injected="true">(function() {
+  const SCROLL_KEYS = new Set([
+    'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight',
+    ' ', 'Spacebar', 'PageUp', 'PageDown', 'Home', 'End',
+  ]);
+  const HORIZONTAL_KEYS = new Set(['ArrowLeft', 'ArrowRight']);
+
+  function isTextEntryTarget(target) {
+    if (!target) return false;
+    const tagName = target.tagName;
+    return tagName === 'INPUT' || tagName === 'TEXTAREA' ||
+        tagName === 'SELECT' || target.isContentEditable === true;
+  }
+
+  // An element absorbs the key only if it both overflows on the axis being
+  // scrolled and is configured to scroll on that axis. The cheap dimension
+  // test runs first because getComputedStyle forces a style recalc, and this
+  // runs on every keypress. Each axis is read from its own longhand: the
+  // 'overflow' shorthand serializes as two values when the axes differ, which
+  // is the common 'overflow-x: hidden; overflow-y: auto' pane.
+  function canScroll(node, horizontal) {
+    const overflows = horizontal ? node.scrollWidth > node.clientWidth
+                                 : node.scrollHeight > node.clientHeight;
+    if (!overflows) return false;
+    const style = window.getComputedStyle(node);
+    const overflow = horizontal ? style.overflowX : style.overflowY;
+    return overflow === 'auto' || overflow === 'scroll';
+  }
+
+  // Walks up from the event target so nested scrollers keep their behavior.
+  // <body> is included because pages that pin the root height make it the
+  // scroll container.
+  function hasScrollableAncestor(target, horizontal) {
+    let node = target;
+    while (node && node !== document.documentElement) {
+      if (canScroll(node, horizontal)) return true;
+      node = node.parentElement;
+    }
+    return false;
+  }
+
+  function rootCanScroll(horizontal) {
+    const scroller = document.scrollingElement || document.documentElement;
+    if (!scroller) return false;
+    // Tolerate a pixel of rounding so subpixel layouts do not look scrollable.
+    return horizontal ? scroller.scrollWidth > window.innerWidth + 1
+                      : scroller.scrollHeight > window.innerHeight + 1;
+  }
+
+  window.addEventListener('keydown', function(event) {
+    if (!SCROLL_KEYS.has(event.key)) return;
+    if (event.defaultPrevented) return;
+    // Alt and Meta turn arrows into browser history navigation, and Ctrl is
+    // reserved for shortcuts, so none of them are scroll intent.
+    if (event.altKey || event.metaKey || event.ctrlKey) return;
+
+    const target = event.target;
+    if (isTextEntryTarget(target)) return;
+
+    // Anything that can still absorb the scroll gets to keep it.
+    const horizontal = HORIZONTAL_KEYS.has(event.key);
+    if (rootCanScroll(horizontal)) return;
+    if (hasScrollableAncestor(target, horizontal)) return;
+
+    event.preventDefault();
+  }, {capture: true, passive: false});
+})();</script><script data-bard-client-injected="true">(function() {
+  // Ensure this script is executed only once
+  if (window.firebaseAuthBridgeScriptLoaded) {
+    return;
+  }
+  window.firebaseAuthBridgeScriptLoaded = true;
+
+  let nextTokenPromiseId = 0;
+
+  // Stores { resolve, reject } for ongoing token requests
+  const pendingTokenPromises = {};
+
+  // Listen for messages from the Host Application
+  window.addEventListener('message', function(event) {
+
+    const messageData = event.data;
+
+  if (messageData && messageData.type === 'RESOLVE_NEW_FIREBASE_TOKEN') {
+      const { success, token, error, promiseId } = messageData ?? {};
+      if (pendingTokenPromises[promiseId]) {
+        if (success) {
+          pendingTokenPromises[promiseId].resolve(token);
+        } else {
+          pendingTokenPromises[promiseId].reject(new Error(error || 'Token refresh failed from host.'));
+        }
+        delete pendingTokenPromises[promiseId];
+      }
+    }
+  });
+
+  // Expose a function for the Generated App to request a new Firebase token
+  window.requestNewFirebaseToken = function() {
+    const currentPromiseId = nextTokenPromiseId++;
+    const promise = new Promise((resolve, reject) => {
+      pendingTokenPromises[currentPromiseId] = { resolve, reject };
+    });
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage({
+        type: 'REQUEST_NEW_FIREBASE_TOKEN',
+        promiseId: currentPromiseId
+      }, '*');
+    } else {
+      pendingTokenPromises[currentPromiseId].reject(new Error('No parent window to request token from.'));
+      delete pendingTokenPromises[currentPromiseId];
+    }
+    return promise;
+  };
+})();</script><script data-bard-client-injected="true">
+let realOriginalGetUserMedia = null;
+if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+  realOriginalGetUserMedia = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
+}
+
+(function() {
+  if (navigator.mediaDevices && navigator.mediaDevices.__proto__) {
+    try {
+      Object.defineProperty(navigator.mediaDevices.__proto__, 'getUserMedia', {
+        get: function() {
+          return undefined; // Or throw an error
+        },
+        configurable: false
+      });
+    } catch (error) {
+      console.error("Error defining prototype getter:", error);
+    }
+  }
+})();
+
+(function() {
+  const pendingMediaResolvers = {};
+  let nextMediaPromiseId = 0;
+
+  function requestMediaPermissions(constraints) {
+    const mediaPromiseId = nextMediaPromiseId++;
+    const promise = new Promise((resolve, reject) => {
+      pendingMediaResolvers[mediaPromiseId] = (granted) => {
+        delete pendingMediaResolvers[mediaPromiseId];
+        resolve(granted);
+      };
+    });
+
+    window.parent.postMessage({
+      type: 'requestMediaPermission',
+      constraints: constraints,
+      promiseId: mediaPromiseId,
+    }, '*');
+
+    return promise;
+  }
+
+  let originalGetUserMedia = realOriginalGetUserMedia;
+
+  function interceptGetUserMedia() {
+    if (navigator.mediaDevices) {
+      Object.defineProperty(navigator.mediaDevices, 'getUserMedia', {
+        value: function(constraints) {
+          return requestMediaPermissions(constraints).then((granted) => {
+            if (granted) {
+              if (originalGetUserMedia) {
+                return originalGetUserMedia(constraints);
+              } else {
+                throw new Error("Original getUserMedia not available.");
+              }
+            } else {
+              throw new DOMException('Permission denied', 'NotAllowedError');
+            }
+          });
+        },
+        writable: false,
+        configurable: false
+      });
+    }
+  }
+
+  interceptGetUserMedia();
+
+  const observer = new MutationObserver(function(mutationsList, observer) {
+    for (const mutation of mutationsList) {
+      if (mutation.type === 'reconfigured' && mutation.name === 'getUserMedia' && mutation.object === navigator.mediaDevices) {
+        interceptGetUserMedia();
+      } else if (mutation.type === 'attributes' && mutation.attributeName === 'getUserMedia' && mutation.target === navigator.mediaDevices) {
+        interceptGetUserMedia();
+      } else if (mutation.type === 'childList' && mutation.addedNodes) {
+        mutation.addedNodes.forEach(node => {
+          if (node === navigator.mediaDevices) {
+            interceptGetUserMedia();
+          }
+        });
+      }
+    }
+  });
+
+  function interceptSpeechRecognition() {
+    if (!window.SpeechRecognition && !window.webkitSpeechRecognition) {
+      return;
+    }
+
+    const OriginalSpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    const SpeechRecognitionWrapper = function(...args) {
+      const recognizer = new OriginalSpeechRecognition(...args);
+      const originalStart = recognizer.start.bind(recognizer);
+
+      recognizer.start = function() {
+        requestMediaPermissions({ audio: true }).then(granted => {
+          if (granted) {
+            originalStart();
+          } else {
+            const errorEvent = new SpeechRecognitionErrorEvent('error');
+            errorEvent.error = 'not-allowed'; // This is the standard error for permission denial.
+            recognizer.dispatchEvent(errorEvent);
+          }
+        });
+      };
+
+      return recognizer;
+    };
+
+    SpeechRecognitionWrapper.prototype = OriginalSpeechRecognition.prototype;
+    SpeechRecognitionWrapper.prototype.constructor = SpeechRecognitionWrapper;
+
+    if (window.SpeechRecognition) {
+      window.SpeechRecognition = SpeechRecognitionWrapper;
+    }
+    if (window.webkitSpeechRecognition) {
+      window.webkitSpeechRecognition = SpeechRecognitionWrapper;
+    }
+  }
+
+  interceptSpeechRecognition();
+
+  window.addEventListener('message', function(event) {
+    if (event.data) {
+      if (event.data.type === 'resolveMediaPermission') {
+        const { promiseId, granted } = event.data;
+        if (pendingMediaResolvers[promiseId]) {
+          pendingMediaResolvers[promiseId](granted);
+        }
+      }
+    }
+  });
+
+})();</script><script ws-interception-config="{&quot;parentOrigin&quot;:&quot;https://gemini.google.com&quot;,&quot;proxiedDomains&quot;:[]}" data-bard-client-injected="true">(function(){'use strict';var u=typeof Object.defineProperties=="function"?Object.defineProperty:function(b,d,e){if(b==Array.prototype||b==Object.prototype)return b;b[d]=e.value;return b};function v(b){b=["object"==typeof globalThis&&globalThis,b,"object"==typeof window&&window,"object"==typeof self&&self,"object"==typeof global&&global];for(var d=0;d<b.length;++d){var e=b[d];if(e&&e.Math==Math)return e}throw Error("Cannot find global object");}var w=v(this);
+function y(b,d){if(d)a:{var e=w;b=b.split(".");for(var h=0;h<b.length-1;h++){var k=b[h];if(!(k in e))break a;e=e[k]}b=b[b.length-1];h=e[b];d=d(h);d!=h&&d!=null&&u(e,b,{configurable:!0,writable:!0,value:d})}}function z(b){function d(h){return b.next(h)}function e(h){return b.throw(h)}return new Promise(function(h,k){function m(n){n.done?h(n.value):Promise.resolve(n.value).then(d,e).then(m,k)}m(b.next())})}y("globalThis",function(b){return b||w});/*
+
+ Copyright The Closure Library Authors.
+ SPDX-License-Identifier: Apache-2.0
+*/
+function A(b,d){function e(){}e.prototype=d.prototype;b.j=d.prototype;b.prototype=new e;b.prototype.constructor=b;b.h=function(h,k,m){for(var n=Array(arguments.length-2),p=2;p<arguments.length;p++)n[p-2]=arguments[p];return d.prototype[k].apply(h,n)}};function B(b,d,e="*"){function h(a){if(typeof a==="string")return F.encode(a).buffer;if(a instanceof ArrayBuffer)return a.slice(0);if(ArrayBuffer.isView(a))return a.buffer.slice(a.byteOffset,a.byteOffset+a.byteLength);throw Error("Invalid data type");}function k(a){a=h(a);var f={type:"send",data:new Uint8Array(a)},g;(g=r)==null||g.postMessage(f,[a])}function m(){if(!r)throw Error("Data port not captured yet.");r.onmessage=a=>{if(a.data.type==="message"){a=new MessageEvent("message",{data:G.decode(a.data.data)});
+let f;(f=c.onmessage)==null||f.call(c,a);c.dispatchEvent(a)}}}function n(){if(!t)throw Error("Control port not captured yet.");t.onmessage=a=>{switch(a.data.type){case "open":l=1;var f=new Event("open"),g;(g=c.onopen)==null||g.call(c,f);c.dispatchEvent(f);q.forEach(H=>{k(H)});q=[];break;case "close":g=a.data;l=3;g=new CloseEvent("close",{code:g.code,reason:g.reason,wasClean:g.wasClean});(f=c.onclose)==null||f.call(c,g);c.dispatchEvent(g);break;case "error":l=3;f=new Event("error");let x;(x=c.onerror)==
+null||x.call(c,f);c.dispatchEvent(f)}}}function p(a){return z(function*(){var f=new MessageChannel;t=f.port1;var g=new MessageChannel;r=g.port1;n();m();window.parent.postMessage({type:"websocket_open",portOrdering:["control","data"],url:b,protocols:a||[],connectionId:I},e,[f.port2,g.port2])}())}var c=Reflect.construct(EventTarget,[],new.target);c.CONNECTING=0;c.OPEN=1;c.CLOSING=2;c.CLOSED=3;c.url=b;c.binaryType="arraybuffer";c.protocol="";c.i="";var l=0,t=null,r=null,q=[],F=new TextEncoder,G=new TextDecoder;
+c.onopen=null;c.onmessage=null;c.onclose=null;c.onerror=null;Object.defineProperty(c,"readyState",{get:()=>l,enumerable:!0,configurable:!0});Object.defineProperty(c,"bufferedAmount",{get:()=>{var a=0;q.forEach(f=>{a+=typeof f==="string"?f.length:f.byteLength});return a},enumerable:!0,configurable:!0});var I=function(){var a;return((a=globalThis.crypto)==null?0:a.randomUUID)?globalThis.crypto.randomUUID():"xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g,f=>{var g=Math.random()*16|0;return(f===
+"x"?g:g&3|8).toString(16)})}();c.send=a=>{if(l===1)a instanceof Blob?a.arrayBuffer().then(f=>{k(f)}):k(a);else if(l===0)if(typeof a==="string")q.push(a);else if(a instanceof ArrayBuffer||ArrayBuffer.isView(a))q.push(h(a));else throw Error("Sending Blob is not supported before the connection is open.");else console.debug("WebSocket send called in CLOSING or CLOSED state; ignored.")};c.close=(a=1E3,f="")=>{if(l!==2&&l!==3){l=2;a={type:"close",code:a,reason:f,wasClean:a===1E3};var g;(g=t)==null||g.postMessage(a)}};
+Promise.resolve().then(()=>p(d));return c}A(B,EventTarget);var C=document.currentScript,D=C==null?void 0:C.getAttribute("ws-interception-config");if(!D)throw Error("WebSocket Interceptor: Missing ws-interception-config attribute in the script tag.");var E=JSON.parse(D);if(!E.parentOrigin||typeof E.parentOrigin!=="string")throw Error("WebSocket Interceptor: Invalid parentOrigin in ws-interception-config");
+(function(b){var d=Object.getOwnPropertyDescriptor(window,"WebSocket");if(!d||d.writable||d.configurable)d=Object.assign(function(e,h){try{let k=(new URL(e)).hostname;if(b.proxiedDomains.some(m=>k===m||k.endsWith(`.${m}`)))return new B(e,h,b.parentOrigin)}catch(k){throw window.parent.postMessage({type:"websocket_blocked",url:e,reason:"blocked_invalid_url"},b.parentOrigin),new DOMException(`WebSocket connection to '${e}' is not allowed in Canvas.`,"SecurityError");}window.parent.postMessage({type:"websocket_blocked",
+url:e,reason:"blocked_domain_not_allowlisted"},b.parentOrigin);throw new DOMException(`WebSocket connection to '${e}' is not allowed in Canvas.`,"SecurityError");},{CONNECTING:0,OPEN:1,CLOSING:2,CLOSED:3}),Object.defineProperty(window,"WebSocket",{value:d,writable:!1,configurable:!1})})({proxiedDomains:E.proxiedDomains||[],parentOrigin:E.parentOrigin});}).call(this);
+</script><script data-bard-client-injected="true">((function(modelInformation) {
+  const originalFetch = window.fetch;
+  // TODO: b/421908508 - Move these out of the script and match all generative AI model calls.
+  let googleLlmBaseApiUrls = [
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.textModelName + ':streamGenerateContent',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.textModelName + ':generateContent',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.imageModelName + ':predict',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.imageModelName + ':predictLongRunning',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.imageEditModelName + ':generateContent',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.imageTransformModelName + ':generateContent',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.videoModelName + ':predict',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.videoModelName + ':predictLongRunning',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.ttsModelName + ':generateContent',
+  ];
+  modelInformation.deprecatedTextModelNames.forEach((modelName) => {
+    googleLlmBaseApiUrls.push(
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':streamGenerateContent',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':generateContent',
+    );
+  });
+  modelInformation.deprecatedImageModelNames.forEach((modelName) => {
+    googleLlmBaseApiUrls.push(
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':predict',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':predictLongRunning',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':generateContent',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':streamGenerateContent',
+    );
+  });
+  modelInformation.deprecatedGenerateImageModelNames.forEach((modelName) => {
+    googleLlmBaseApiUrls.push(
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':generateContent',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':streamGenerateContent',
+    );
+  });
+  modelInformation.deprecatedImageTransformModelNames.forEach((modelName) => {
+    googleLlmBaseApiUrls.push(
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':generateContent',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':streamGenerateContent',
+    );
+  });
+
+  const pendingFetchResolvers = {};
+  let nextPromiseId = 0;
+
+  function handleStringInput(input, optionsArgument) {
+    const actualUrl = input;
+    const fetchCallArgs = [actualUrl, optionsArgument];
+    const effectiveOptions = optionsArgument || {};
+    const bodyForApiKeyCheck = effectiveOptions.body;
+    const bodyForPostMessage = effectiveOptions.body;
+    return { actualUrl, fetchCallArgs, effectiveOptions, bodyForApiKeyCheck, bodyForPostMessage };
+  }
+
+  function handleRequestInput(input, optionsArgument) {
+    const actualUrl = input.url;
+    const fetchCallArgs = [input, optionsArgument];
+    const effectiveOptions = { method: input.method, headers: new Headers(input.headers) };
+    let bodyForApiKeyCheck;
+    let bodyForPostMessage;
+
+    if (optionsArgument) {
+      if (optionsArgument.method) effectiveOptions.method = optionsArgument.method;
+      if (optionsArgument.headers) effectiveOptions.headers = new Headers(optionsArgument.headers);
+      if ('body' in optionsArgument) {
+        bodyForApiKeyCheck = optionsArgument.body;
+        bodyForPostMessage = optionsArgument.body;
+      } else {
+        bodyForApiKeyCheck = undefined;
+        bodyForPostMessage = input.body;
+      }
+    } else {
+      bodyForApiKeyCheck = undefined;
+      bodyForPostMessage = input.body;
+    }
+    return { actualUrl, fetchCallArgs, effectiveOptions, bodyForApiKeyCheck, bodyForPostMessage };
+  }
+
+  window.fetch = function(input, optionsArgument) {
+    let actualUrl;
+    let fetchCallArgs;
+    let effectiveOptions = {};
+    let bodyForApiKeyCheck;
+    let bodyForPostMessage;
+
+    if (typeof input === 'string') {
+      ({actualUrl, fetchCallArgs, effectiveOptions, bodyForApiKeyCheck, bodyForPostMessage} = handleStringInput(input, optionsArgument));
+    } else if (input instanceof Request) {
+      ({actualUrl, fetchCallArgs, effectiveOptions, bodyForApiKeyCheck, bodyForPostMessage} = handleRequestInput(input, optionsArgument));
+    } else {
+      return originalFetch.apply(window, [input, optionsArgument]);
+    }
+
+    effectiveOptions.method = effectiveOptions.method || 'GET';
+    if (!effectiveOptions.headers) {
+      effectiveOptions.headers = new Headers();
+    }
+
+
+    if (typeof actualUrl === 'string' && googleLlmBaseApiUrls.some((url) => actualUrl.startsWith(url))) {
+      let apiKeyIsNull = true;
+
+      const regex = new RegExp("models/([^:]+)");
+      const modelNameMatch = actualUrl.match(regex);
+      const modelName = modelNameMatch ? modelNameMatch[1] : 'unspecified';
+
+
+      try {
+        const urlObject = new URL(actualUrl);  // Use URL object for robust parsing
+        const apiKeyParam = urlObject.searchParams.get('key');
+        if (apiKeyParam) {
+          apiKeyIsNull = false;
+        }
+      } catch (e) {
+        // Continue checks even if URL parsing fails
+      }
+
+      if (apiKeyIsNull && effectiveOptions.headers) {
+        const h = new Headers(effectiveOptions.headers);
+        const apiKeyHeaderValue = h.get('X-API-Key') || h.get('x-api-key');
+        if (apiKeyHeaderValue) {
+          apiKeyIsNull = false;
+          return originalFetch.apply(window, fetchCallArgs);
+        }
+      }
+
+      if (apiKeyIsNull && effectiveOptions.method && ['POST', 'PUT', 'PATCH'].includes(effectiveOptions.method.toUpperCase()) && typeof bodyForApiKeyCheck === 'string') {
+        try {
+          const bodyData = JSON.parse(bodyForApiKeyCheck);
+          if (bodyData && bodyData.apiKey) {
+            apiKeyIsNull = false;
+            return originalFetch.apply(window, fetchCallArgs);
+          }
+        } catch (e) {
+          // Ignore JSON parsing errors
+        }
+      }
+
+      if(apiKeyIsNull) {
+        const promiseId = nextPromiseId++;
+        const promise = new Promise((resolve) => {
+          pendingFetchResolvers[promiseId] = (resolvedResponse) => {
+            delete pendingFetchResolvers[promiseId];
+            resolve(resolvedResponse);
+          };
+        });
+
+        let serializedBodyForPostMessage;
+        if (typeof bodyForPostMessage === 'string' || bodyForPostMessage == null) {
+            serializedBodyForPostMessage = bodyForPostMessage;
+        } else if (bodyForPostMessage instanceof ReadableStream) {
+            serializedBodyForPostMessage = null;
+        } else {
+            try {
+                serializedBodyForPostMessage = JSON.stringify(bodyForPostMessage);
+            } catch (e) {
+                serializedBodyForPostMessage = null;
+            }
+        }
+
+        const messageOptions = {
+            method: effectiveOptions.method,
+            headers: Object.fromEntries(new Headers(effectiveOptions.headers).entries()),
+            body: serializedBodyForPostMessage
+        };
+
+        window.parent.postMessage({
+          type: 'requestFetch',
+          url: actualUrl,
+          modelName: modelName,
+          options: messageOptions,
+          promiseId: promiseId,
+        }, '*');
+
+        return promise;
+      }
+      return originalFetch.apply(window, fetchCallArgs);
+    }
+    return originalFetch.apply(window, fetchCallArgs);
+  };
+
+  window.addEventListener('message', function(event) {
+    if (event.data && event.data.type === 'resolveFetch') {
+      const { promiseId, response } = event.data;
+      if (pendingFetchResolvers[promiseId]) {
+        try {
+          const reconstructedResponse = new Response(response.body, {
+            status: response.status,
+            statusText: response.statusText,
+            headers: new Headers(response.headers),
+          });
+          pendingFetchResolvers[promiseId](reconstructedResponse);
+        } catch (error) {
+          pendingFetchResolvers[promiseId](new Response(null, { status: 500, statusText: "Interceptor Response Reconstruction Error" }));
+        }
+      }
+    }
+  });
+
+}))({"textModelName":"gemini-3-flash-preview","imageModelName":"imagen-4.0-generate-001","imageEditModelName":"gemini-3.1-flash-image","imageTransformModelName":"gemini-3-pro-image","videoModelName":"veo-2.0-generate-001","ttsModelName":"gemini-2.5-flash-preview-tts","deprecatedTextModelNames":["gemini-2.0-flash","gemini-2.5-flash","gemini-2.5-flash-preview-04-17","gemini-2.5-flash-preview-05-20","gemini-2.5-flash-preview-09-2025"],"deprecatedImageModelNames":["imagen-3.0-generate-001","imagen-3.0-generate-002"],"deprecatedGenerateImageModelNames":["gemini-2.5-flash-image-preview","gemini-2.5-flash-image","gemini-3.1-flash-image-preview"],"deprecatedImageTransformModelNames":["gemini-3-pro-image-preview-11-2025"]})</script><script data-bard-client-injected="true">(function() {
+  function normalizeSlug(str) {
+    try {
+      return str
+        .trim()
+        .toLowerCase()
+        .replace(/[^p{L}p{N}s_-]/gu, '')
+        .replace(/s+/g, '-');
+    } catch (e) {
+      return str
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9s_-]/g, '')
+        .replace(/s+/g, '-');
+    }
+  }
+
+  function findTargetElement(hash) {
+    if (!hash || hash === '#') {
+      return null;
+    }
+    const rawId = hash.startsWith('#') ? hash.slice(1) : hash;
+    let decodedId = rawId;
+    try {
+      decodedId = decodeURIComponent(rawId);
+    } catch (e) {
+      // Ignore URI malformed errors.
+    }
+
+    // 1. Direct ID match (raw and decoded).
+    let target = document.getElementById(rawId) || document.getElementById(decodedId);
+    if (target) {
+      return target;
+    }
+
+    // 2. Name attribute match (<a name="...">).
+    try {
+      if (typeof CSS !== 'undefined' && CSS.escape) {
+        target =
+          document.querySelector('[name="' + CSS.escape(rawId) + '"]') ||
+          document.querySelector('[name="' + CSS.escape(decodedId) + '"]');
+      } else {
+        const namedElements = document.getElementsByName(rawId);
+        if (namedElements && namedElements.length > 0) {
+          return namedElements[0];
+        }
+      }
+    } catch (e) {
+      // Ignore querySelector syntax errors.
+    }
+    if (target) {
+      return target;
+    }
+
+    // 3. Match heading text by slug (for Markdown TOCs where headings lack explicit IDs).
+    const targetSlug = normalizeSlug(decodedId);
+    if (targetSlug) {
+      for (const heading of document.querySelectorAll('h1, h2, h3, h4, h5, h6')) {
+        if (normalizeSlug(heading.textContent || '') === targetSlug) {
+          return heading;
+        }
+      }
+    }
+
+    return null;
+  }
+
+  document.addEventListener('click', function(event) {
+    const target = event.target;
+    const anchor = target && typeof target.closest === 'function' ? target.closest('a') : null;
+    if (!anchor) {
+      return;
+    }
+
+    const href = anchor.getAttribute('href');
+    if (
+      !href ||
+      href.trim().toLowerCase().startsWith('javascript:') ||
+      anchor.hasAttribute('download')
+    ) {
+      return;
+    }
+
+    // Check if the link is an in-page hash / anchor link.
+    if (href.startsWith('#')) {
+      event.preventDefault();
+      const targetElement = findTargetElement(href);
+      if (targetElement) {
+        targetElement.scrollIntoView({behavior: 'smooth', block: 'start'});
+      }
+      return;
+    }
+
+    // Check if the URL has the same origin/pathname but with a hash.
+    try {
+      const url = new URL(anchor.href, window.location.href);
+      if (
+        url.hash &&
+        url.origin === window.location.origin &&
+        url.pathname === window.location.pathname
+      ) {
+        event.preventDefault();
+        const targetElement = findTargetElement(url.hash);
+        if (targetElement) {
+          targetElement.scrollIntoView({behavior: 'smooth', block: 'start'});
+        }
+        return;
+      }
+    } catch (e) {
+      // Fall through if URL parsing fails.
+    }
+
+    // For all external or full navigation links, prevent iframe-level navigation
+    // (which breaks in AGSA WebView or sandboxed iframes) and ensure they open
+    // safely in a new tab/window.
+    if (anchor.target !== '_blank') {
+      event.preventDefault();
+      window.open(anchor.href, '_blank', 'noopener,noreferrer');
+    }
+  }, {capture: true});
+})();</script><script data-bard-client-injected="true">(function(){'use strict';function a(){window.parent.postMessage({type:"interaction"},"*")}window.addEventListener("click",a,{capture:!0,passive:!0});window.addEventListener("touchstart",a,{capture:!0,passive:!0});window.addEventListener("keydown",a,{capture:!0,passive:!0});}).call(this);
+</script><script data-bard-client-injected="true">(function() {
+  const originalConsoleLog = console.log;
+  const originalConsoleError = console.error;
+
+    /**
+   * Normalizes an error event or a promise rejection reason into a structured error object.
+   * @param {*} errorEventOrReason The error object or reason.
+   * @return {object} Structured error data { message, name, stack }.
+   */
+  function getErrorObject(errorEventOrReason) {
+    if (errorEventOrReason instanceof Error) {
+      return {
+        message: errorEventOrReason.message,
+        name: errorEventOrReason.name,
+        stack: errorEventOrReason.stack,
+      };
+    }
+    // Fallback for non-Error objects.
+    try {
+      return {
+        message: JSON.stringify(errorEventOrReason),
+        name: 'UnknownErrorType',
+        stack: null,
+      };
+    } catch (e) {
+      return {
+        message: String(errorEventOrReason),
+        name: 'UnknownErrorTypeNonStringifiable',
+        stack: null,
+      };
+    }
+  }
+
+  /**
+   * Converts an array of arguments (from log/error) into a single string.
+   * Handles Error objects specially to include their message and stack.
+   * @param {Array<*>} args - Arguments passed to console methods.
+   * @return {string} A string representation of the arguments.
+   */
+  function stringifyArgs(args) {
+    return args
+      .map((arg) => {
+        if (arg instanceof Error) {
+          const {message, stack} = arg;
+          return `Error: ${message}${stack ? ('\nStack: ' + stack) : ''}`;
+        }
+        if (typeof arg === 'object' && arg !== null) {
+          try {
+            return JSON.stringify(arg);
+          } catch (error) {
+            return '[Circular Object]';
+          }
+        } else {
+          return String(arg);
+        }
+      })
+      .join(' ');
+  }
+
+  console.log = function(...args) {
+    const logString = stringifyArgs(args);
+    window.parent.postMessage({ type: 'log', message: logString }, '*');
+    originalConsoleLog.apply(console, args);
+  };
+
+  console.error = function(...args) {
+    let errorData;
+    if (args.length > 0 && args[0] instanceof Error) {
+      const err = args[0];
+      // If the first arg is an Error, capture its details.
+      errorData = {
+        type: 'error',
+        source: 'CONSOLE_ERROR',
+        ...getErrorObject(err),
+        rawArgsString: stringifyArgs(args.slice(1)),
+        timestamp: new Date().toISOString(),
+      };
+    } else {
+      // If not an Error object, treat all args as a general error message.
+      errorData = {
+        type: 'error',
+        source: 'CONSOLE_ERROR',
+        message: stringifyArgs(args),
+        name: 'ConsoleLoggedError',
+        stack: null,
+        timestamp: new Date().toISOString(),
+      };
+    }
+    window.parent.postMessage(errorData, '*');
+    originalConsoleError.apply(console, args);
+  };
+
+  // Listen for global unhandled synchronous errors.
+  window.addEventListener('error', function(event) {
+    const errorDetails = event.error ? getErrorObject(event.error) : {
+      message: event.message,
+      name: 'GlobalError',
+      stack: null,
+      filename: event.filename,
+      lineno: event.lineno,
+      colno: event.colno,
+    };
+
+    window.parent.postMessage({
+      type: 'error',
+      source: 'global',
+      ...errorDetails,
+      message: errorDetails.message || event.message,
+      timestamp: new Date().toISOString(),
+    }, '*');
+  });
+
+  // Listen for unhandled promise rejections (asynchronous errors).
+  window.addEventListener('unhandledrejection', function(event) {
+    const errorDetails = getErrorObject(event.reason);
+
+    window.parent.postMessage({
+      type: 'error',
+      source: 'unhandledrejection',
+      ...errorDetails,
+      message: errorDetails.message || 'Unhandled Promise Rejection',
+      timestamp: new Date().toISOString(),
+    }, '*');
+  });
+
+})();</script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>拧螺丝解压工坊 - 物理金属片掉落游戏</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" crossorigin="anonymous"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@500;700;900&display=swap');
+        
+        * {
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #678772;
+            font-family: 'Noto Sans SC', sans-serif;
+            touch-action: none;
+        }
+
+        /* 顶部毛玻璃导航栏 */
+        .glass-panel {
+            background: rgba(38, 54, 44, 0.72);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1.5px solid rgba(255, 255, 255, 0.22);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+        }
+
+        .game-btn {
+            transition: all 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .game-btn:active {
+            transform: scale(0.92);
+        }
+
+        /* 进度条流光动画 */
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        .progress-bar-fill {
+            background: linear-gradient(90deg, #c4b5fd 0%, #f5d0fe 50%, #a78bfa 100%);
+            background-size: 200% 100%;
+            animation: shimmer 3s infinite linear;
+        }
+
+        canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+            cursor: pointer;
+        }
+    </style>
+<style>*, ::before, ::after{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }::backdrop{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }/* ! tailwindcss v3.4.17 | MIT License | https://tailwindcss.com */*,::after,::before{box-sizing:border-box;border-width:0;border-style:solid;border-color:#e5e7eb}::after,::before{--tw-content:''}:host,html{line-height:1.5;-webkit-text-size-adjust:100%;-moz-tab-size:4;tab-size:4;font-family:ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";font-feature-settings:normal;font-variation-settings:normal;-webkit-tap-highlight-color:transparent}body{margin:0;line-height:inherit}hr{height:0;color:inherit;border-top-width:1px}abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;text-decoration:inherit}b,strong{font-weight:bolder}code,kbd,pre,samp{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;font-feature-settings:normal;font-variation-settings:normal;font-size:1em}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.5em}table{text-indent:0;border-color:inherit;border-collapse:collapse}button,input,optgroup,select,textarea{font-family:inherit;font-feature-settings:inherit;font-variation-settings:inherit;font-size:100%;font-weight:inherit;line-height:inherit;letter-spacing:inherit;color:inherit;margin:0;padding:0}button,select{text-transform:none}button,input:where([type=button]),input:where([type=reset]),input:where([type=submit]){-webkit-appearance:button;background-color:transparent;background-image:none}:-moz-focusring{outline:auto}:-moz-ui-invalid{box-shadow:none}progress{vertical-align:baseline}::-webkit-inner-spin-button,::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}summary{display:list-item}blockquote,dd,dl,figure,h1,h2,h3,h4,h5,h6,hr,p,pre{margin:0}fieldset{margin:0;padding:0}legend{padding:0}menu,ol,ul{list-style:none;margin:0;padding:0}dialog{padding:0}textarea{resize:vertical}input::placeholder,textarea::placeholder{opacity:1;color:#9ca3af}[role=button],button{cursor:pointer}:disabled{cursor:default}audio,canvas,embed,iframe,img,object,svg,video{display:block;vertical-align:middle}img,video{max-width:100%;height:auto}[hidden]:where(:not([hidden=until-found])){display:none}.pointer-events-none{pointer-events:none}.pointer-events-auto{pointer-events:auto}.fixed{position:fixed}.relative{position:relative}.inset-0{inset:0px}.bottom-4{bottom:1rem}.left-0{left:0px}.left-3{left:0.75rem}.right-0{right:0px}.right-3{right:0.75rem}.top-3{top:0.75rem}.z-20{z-index:20}.z-30{z-index:30}.z-40{z-index:40}.mx-auto{margin-left:auto;margin-right:auto}.mb-1{margin-bottom:0.25rem}.mb-3{margin-bottom:0.75rem}.mb-5{margin-bottom:1.25rem}.inline-block{display:inline-block}.flex{display:flex}.hidden{display:none}.h-16{height:4rem}.h-2{height:0.5rem}.h-2\.5{height:0.625rem}.h-4{height:1rem}.h-5{height:1.25rem}.h-8{height:2rem}.h-9{height:2.25rem}.h-full{height:100%}.h-screen{height:100vh}.max-h-\[88vh\]{max-height:88vh}.w-16{width:4rem}.w-2{width:0.5rem}.w-4{width:1rem}.w-5{width:1.25rem}.w-8{width:2rem}.w-9{width:2.25rem}.w-full{width:100%}.w-screen{width:100vw}.min-w-\[68px\]{min-width:68px}.max-w-lg{max-width:32rem}.max-w-md{max-width:28rem}.max-w-sm{max-width:24rem}.flex-1{flex:1 1 0%}.scale-95{--tw-scale-x:.95;--tw-scale-y:.95;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.scale-100{--tw-scale-x:1;--tw-scale-y:1;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.transform{transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}@keyframes ping{75%, 100%{transform:scale(2);opacity:0}}.animate-ping{animation:ping 1s cubic-bezier(0, 0, 0.2, 1) infinite}@keyframes pulse{50%{opacity:.5}}.animate-pulse{animation:pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite}.cursor-not-allowed{cursor:not-allowed}.select-none{-webkit-user-select:none;user-select:none}.list-inside{list-style-position:inside}.list-decimal{list-style-type:decimal}.flex-col{flex-direction:column}.items-center{align-items:center}.justify-end{justify-content:flex-end}.justify-center{justify-content:center}.justify-between{justify-content:space-between}.gap-1{gap:0.25rem}.gap-1\.5{gap:0.375rem}.gap-2{gap:0.5rem}.gap-2\.5{gap:0.625rem}.gap-3{gap:0.75rem}.space-y-1\.5 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.375rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.375rem * var(--tw-space-y-reverse))}.space-y-2 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.5rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.5rem * var(--tw-space-y-reverse))}.space-y-4 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(1rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(1rem * var(--tw-space-y-reverse))}.overflow-hidden{overflow:hidden}.overflow-x-auto{overflow-x:auto}.overflow-y-auto{overflow-y:auto}.whitespace-nowrap{white-space:nowrap}.rounded-2xl{border-radius:1rem}.rounded-3xl{border-radius:1.5rem}.rounded-full{border-radius:9999px}.rounded-lg{border-radius:0.5rem}.rounded-xl{border-radius:0.75rem}.border{border-width:1px}.border-2{border-width:2px}.border-b{border-bottom-width:1px}.border-t{border-top-width:1px}.border-amber-200{--tw-border-opacity:1;border-color:rgb(253 230 138 / var(--tw-border-opacity, 1))}.border-amber-300\/50{border-color:rgb(252 211 77 / 0.5)}.border-amber-300\/60{border-color:rgb(252 211 77 / 0.6)}.border-purple-200\/40{border-color:rgb(233 213 255 / 0.4)}.border-purple-200\/60{border-color:rgb(233 213 255 / 0.6)}.border-purple-300\/40{border-color:rgb(216 180 254 / 0.4)}.border-purple-300\/60{border-color:rgb(216 180 254 / 0.6)}.border-transparent{border-color:transparent}.border-white\/10{border-color:rgb(255 255 255 / 0.1)}.border-white\/15{border-color:rgb(255 255 255 / 0.15)}.border-white\/20{border-color:rgb(255 255 255 / 0.2)}.border-white\/25{border-color:rgb(255 255 255 / 0.25)}.border-white\/30{border-color:rgb(255 255 255 / 0.3)}.bg-\[\#233329\]{--tw-bg-opacity:1;background-color:rgb(35 51 41 / var(--tw-bg-opacity, 1))}.bg-\[\#2c3e33\]{--tw-bg-opacity:1;background-color:rgb(44 62 51 / var(--tw-bg-opacity, 1))}.bg-amber-300{--tw-bg-opacity:1;background-color:rgb(252 211 77 / var(--tw-bg-opacity, 1))}.bg-amber-400{--tw-bg-opacity:1;background-color:rgb(251 191 36 / var(--tw-bg-opacity, 1))}.bg-black\/25{background-color:rgb(0 0 0 / 0.25)}.bg-black\/30{background-color:rgb(0 0 0 / 0.3)}.bg-black\/40{background-color:rgb(0 0 0 / 0.4)}.bg-black\/50{background-color:rgb(0 0 0 / 0.5)}.bg-black\/65{background-color:rgb(0 0 0 / 0.65)}.bg-purple-300\/30{background-color:rgb(216 180 254 / 0.3)}.bg-purple-400\/20{background-color:rgb(192 132 252 / 0.2)}.bg-purple-400\/40{background-color:rgb(192 132 252 / 0.4)}.bg-white\/10{background-color:rgb(255 255 255 / 0.1)}.bg-white\/15{background-color:rgb(255 255 255 / 0.15)}.bg-gradient-to-r{background-image:linear-gradient(to right, var(--tw-gradient-stops))}.from-amber-400{--tw-gradient-from:#fbbf24 var(--tw-gradient-from-position);--tw-gradient-to:rgb(251 191 36 / 0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), var(--tw-gradient-to)}.from-amber-500\/25{--tw-gradient-from:rgb(245 158 11 / 0.25) var(--tw-gradient-from-position);--tw-gradient-to:rgb(245 158 11 / 0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), var(--tw-gradient-to)}.from-purple-400{--tw-gradient-from:#c084fc var(--tw-gradient-from-position);--tw-gradient-to:rgb(192 132 252 / 0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), var(--tw-gradient-to)}.to-amber-500{--tw-gradient-to:#f59e0b var(--tw-gradient-to-position)}.to-emerald-500\/20{--tw-gradient-to:rgb(16 185 129 / 0.2) var(--tw-gradient-to-position)}.to-indigo-400{--tw-gradient-to:#818cf8 var(--tw-gradient-to-position)}.p-0\.5{padding:0.125rem}.p-2{padding:0.5rem}.p-3{padding:0.75rem}.p-3\.5{padding:0.875rem}.p-5{padding:1.25rem}.p-6{padding:1.5rem}.px-2{padding-left:0.5rem;padding-right:0.5rem}.px-2\.5{padding-left:0.625rem;padding-right:0.625rem}.px-3{padding-left:0.75rem;padding-right:0.75rem}.px-3\.5{padding-left:0.875rem;padding-right:0.875rem}.px-4{padding-left:1rem;padding-right:1rem}.px-5{padding-left:1.25rem;padding-right:1.25rem}.py-0\.5{padding-top:0.125rem;padding-bottom:0.125rem}.py-1{padding-top:0.25rem;padding-bottom:0.25rem}.py-1\.5{padding-top:0.375rem;padding-bottom:0.375rem}.py-2{padding-top:0.5rem;padding-bottom:0.5rem}.py-2\.5{padding-top:0.625rem;padding-bottom:0.625rem}.py-3{padding-top:0.75rem;padding-bottom:0.75rem}.py-3\.5{padding-top:0.875rem;padding-bottom:0.875rem}.pb-3{padding-bottom:0.75rem}.pr-1{padding-right:0.25rem}.pt-3{padding-top:0.75rem}.text-center{text-align:center}.text-right{text-align:right}.font-mono{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace}.text-2xl{font-size:1.5rem;line-height:2rem}.text-3xl{font-size:1.875rem;line-height:2.25rem}.text-\[11px\]{font-size:11px}.text-lg{font-size:1.125rem;line-height:1.75rem}.text-sm{font-size:0.875rem;line-height:1.25rem}.text-xl{font-size:1.25rem;line-height:1.75rem}.text-xs{font-size:0.75rem;line-height:1rem}.font-black{font-weight:900}.font-bold{font-weight:700}.leading-relaxed{line-height:1.625}.leading-tight{line-height:1.25}.tracking-wide{letter-spacing:0.025em}.text-amber-200{--tw-text-opacity:1;color:rgb(253 230 138 / var(--tw-text-opacity, 1))}.text-amber-300{--tw-text-opacity:1;color:rgb(252 211 77 / var(--tw-text-opacity, 1))}.text-emerald-100{--tw-text-opacity:1;color:rgb(209 250 229 / var(--tw-text-opacity, 1))}.text-emerald-100\/80{color:rgb(209 250 229 / 0.8)}.text-emerald-200{--tw-text-opacity:1;color:rgb(167 243 208 / var(--tw-text-opacity, 1))}.text-emerald-300{--tw-text-opacity:1;color:rgb(110 231 183 / var(--tw-text-opacity, 1))}.text-emerald-50{--tw-text-opacity:1;color:rgb(236 253 245 / var(--tw-text-opacity, 1))}.text-emerald-50\/90{color:rgb(236 253 245 / 0.9)}.text-purple-100{--tw-text-opacity:1;color:rgb(243 232 255 / var(--tw-text-opacity, 1))}.text-red-300{--tw-text-opacity:1;color:rgb(252 165 165 / var(--tw-text-opacity, 1))}.text-slate-900{--tw-text-opacity:1;color:rgb(15 23 42 / var(--tw-text-opacity, 1))}.text-slate-950{--tw-text-opacity:1;color:rgb(2 6 23 / var(--tw-text-opacity, 1))}.text-white{--tw-text-opacity:1;color:rgb(255 255 255 / var(--tw-text-opacity, 1))}.text-white\/40{color:rgb(255 255 255 / 0.4)}.opacity-0{opacity:0}.shadow{--tw-shadow:0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 1px 3px 0 var(--tw-shadow-color), 0 1px 2px -1px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-2xl{--tw-shadow:0 25px 50px -12px rgb(0 0 0 / 0.25);--tw-shadow-colored:0 25px 50px -12px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-inner{--tw-shadow:inset 0 2px 4px 0 rgb(0 0 0 / 0.05);--tw-shadow-colored:inset 0 2px 4px 0 var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-lg{--tw-shadow:0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 10px 15px -3px var(--tw-shadow-color), 0 4px 6px -4px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-md{--tw-shadow:0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 4px 6px -1px var(--tw-shadow-color), 0 2px 4px -2px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.backdrop-blur-sm{--tw-backdrop-blur:blur(4px);-webkit-backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia)}.transition-all{transition-property:all;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.transition-opacity{transition-property:opacity;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.transition-transform{transition-property:transform;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.duration-300{transition-duration:300ms}.hover\:bg-amber-300:hover{--tw-bg-opacity:1;background-color:rgb(252 211 77 / var(--tw-bg-opacity, 1))}.hover\:bg-white\/20:hover{background-color:rgb(255 255 255 / 0.2)}.hover\:bg-white\/25:hover{background-color:rgb(255 255 255 / 0.25)}.hover\:from-amber-300:hover{--tw-gradient-from:#fcd34d var(--tw-gradient-from-position);--tw-gradient-to:rgb(252 211 77 / 0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), var(--tw-gradient-to)}.hover\:from-purple-300:hover{--tw-gradient-from:#d8b4fe var(--tw-gradient-from-position);--tw-gradient-to:rgb(216 180 254 / 0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), var(--tw-gradient-to)}.hover\:to-amber-400:hover{--tw-gradient-to:#fbbf24 var(--tw-gradient-to-position)}.hover\:to-indigo-300:hover{--tw-gradient-to:#a5b4fc var(--tw-gradient-to-position)}</style></head>
+<body class="relative w-screen h-screen overflow-hidden select-none">
+
+    <!-- 顶部 UI 控制栏 -->
+    <div class="fixed top-3 left-3 right-3 z-20 flex flex-col gap-2 max-w-lg mx-auto pointer-events-none">
+        <div class="glass-panel rounded-2xl px-3.5 py-2.5 flex items-center justify-between pointer-events-auto">
+            <!-- 左侧 Logo 与关卡选择 -->
+            <div class="flex items-center gap-2">
+                <div class="w-9 h-9 rounded-full bg-white/15 border border-white/30 flex items-center justify-center text-white font-black text-lg shadow-inner">
+                    ∞
+                </div>
+                <div>
+                    <div class="text-white font-bold text-sm tracking-wide flex items-center gap-1.5">
+                        <span>拧螺丝工坊</span>
+                        <span id="levelBadge" class="text-xs px-2 py-0.5 rounded-full bg-purple-300/30 text-purple-100 border border-purple-200/40">第 1 关</span>
+                    </div>
+                    <div class="text-[11px] text-emerald-100/80" id="levelNameText">机械手掌 · 原版复刻</div>
+                </div>
+            </div>
+
+            <!-- 右侧操作按钮 -->
+            <div class="flex items-center gap-1.5">
+                <button id="soundBtn" class="game-btn w-9 h-9 rounded-xl bg-white/15 hover:bg-white/25 text-white flex items-center justify-center border border-white/20" title="音效开关">
+                    <svg id="soundOnIcon" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path>
+                    </svg>
+                    <svg id="soundOffIcon" class="w-5 h-5 hidden text-red-300" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15zM17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"></path>
+                    </svg>
+                </button>
+                <button id="resetBtn" class="game-btn px-3 h-9 rounded-xl bg-white/15 hover:bg-white/25 text-white text-xs font-bold flex items-center gap-1 border border-white/20">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    </svg>
+                    重置
+                </button>
+                <button id="apkGuideBtn" class="game-btn px-3 h-9 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-900 text-xs font-black flex items-center gap-1 shadow-md border border-amber-200" style="display: none;">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.3" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                    </svg>
+                    导出Android工程
+                </button>
+            </div>
+        </div>
+
+        <!-- 进度条与关卡切换栏 -->
+        <div class="glass-panel rounded-xl px-3.5 py-2 flex items-center justify-between gap-3 pointer-events-auto">
+            <div class="flex items-center gap-1.5">
+                <button data-level="0" class="level-tab game-btn px-2.5 py-1 rounded-lg text-xs font-bold bg-purple-400/40 text-white border border-purple-200/60">1.手掌</button>
+                <button data-level="1" class="level-tab game-btn px-2.5 py-1 rounded-lg text-xs font-bold bg-white/10 text-emerald-100/80 border border-transparent">2.机械心</button>
+                <button data-level="2" class="level-tab game-btn px-2.5 py-1 rounded-lg text-xs font-bold bg-white/10 text-emerald-100/80 border border-transparent">3.装甲盾</button>
+            </div>
+            <div class="flex-1 flex items-center gap-2">
+                <div class="w-full h-2.5 bg-black/30 rounded-full overflow-hidden p-0.5 border border-white/15">
+                    <div id="progressBar" class="progress-bar-fill h-full rounded-full transition-all duration-300" style="width: 0%"></div>
+                </div>
+                <span id="screwCounter" class="text-xs font-bold text-white whitespace-nowrap min-w-[68px] text-right">0/15 片</span>
+            </div>
+        </div>
+
+        <!-- 2次点击限制状态栏 -->
+        <div class="glass-panel rounded-xl px-3.5 py-2 flex items-center justify-between gap-2 pointer-events-auto">
+            <div class="flex items-center gap-2">
+                <span class="text-xs font-bold text-emerald-100">本轮可用点击：</span>
+                <div id="clickSlots" class="flex items-center gap-1.5"><span class="w-5 h-5 rounded-full bg-amber-400 text-slate-950 font-black text-xs flex items-center justify-center shadow transition-transform scale-100">🔩</span><span class="w-5 h-5 rounded-full bg-amber-400 text-slate-950 font-black text-xs flex items-center justify-center shadow transition-transform scale-100">🔩</span></div>
+                <span id="clickQuotaText" class="text-xs font-black text-amber-300">2 / 2 次</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <span id="resetToast" class="text-[11px] font-bold text-emerald-300 opacity-0 transition-opacity duration-300">✨ 已掉出屏幕，次数重置为 2/2！</span>
+                <span id="fallingWaitBadge" class="hidden text-[11px] font-bold text-amber-200 animate-pulse">⏳ 等待金属块掉出屏幕...</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 底部双按钮操作栏（按钮1：重置，按钮2：撤销上一步） -->
+    <div class="fixed bottom-4 left-0 right-0 z-20 flex flex-col items-center gap-2 px-4 pointer-events-none">
+        <div class="glass-panel rounded-xl px-3.5 py-1.5 text-center pointer-events-auto max-w-md w-full">
+            <div class="text-[11px] text-emerald-50 flex items-center justify-center gap-1.5">
+                <span class="inline-block w-2 h-2 rounded-full bg-amber-300 animate-ping"></span>
+                <span id="bottomHintText"><b>从下往上拆</b>：金属块<b>完全掉出屏幕外</b>才重置为 2 次点击！</span>
+            </div>
+        </div>
+        <div class="glass-panel rounded-2xl p-2 flex items-center justify-center gap-3 pointer-events-auto max-w-md w-full shadow-2xl">
+            <button id="bottomResetBtn" class="game-btn flex-1 py-3 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-black text-sm flex items-center justify-center gap-1.5 shadow-lg border border-amber-200">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                </svg>
+                <span>重置</span>
+            </button>
+            <button id="bottomUndoBtn" class="game-btn flex-1 py-3 rounded-xl bg-white/10 text-white/40 font-bold text-sm flex items-center justify-center gap-1.5 border border-white/10 cursor-not-allowed" disabled="">
+                <span>↩ 撤销上一步</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- 通关祝贺浮动弹窗 -->
+    <div id="winModal" class="fixed inset-0 z-30 flex items-center justify-center bg-black/50 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300 px-4">
+        <div class="bg-[#2c3e33] border-2 border-purple-300/60 rounded-3xl p-6 max-w-sm w-full text-center shadow-2xl transform scale-95 transition-transform duration-300" id="winCard">
+            <div class="w-16 h-16 mx-auto mb-3 rounded-2xl bg-purple-400/20 border border-purple-300/40 flex items-center justify-center text-3xl">
+                🎉
+            </div>
+            <h2 class="text-2xl font-black text-white mb-1">全部拆卸完成！</h2>
+            <p class="text-emerald-100/80 text-xs mb-5">所有金属板已成功滑落脱出，解压满分！</p>
+            <div class="flex gap-3">
+                <button id="replayLevelBtn" class="game-btn flex-1 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 text-white font-bold text-sm border border-white/20">
+                    再玩一次
+                </button>
+                <button id="nextLevelBtn" class="game-btn flex-1 py-2.5 rounded-xl bg-gradient-to-r from-purple-400 to-indigo-400 hover:from-purple-300 hover:to-indigo-300 text-slate-950 font-black text-sm shadow-lg">
+                    下一关 →
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 导出 Android 原生工程与 GitHub Actions 自动编译弹窗 -->
+    <div id="apkModal" class="fixed inset-0 z-40 flex items-center justify-center bg-black/65 backdrop-blur-sm px-4 hidden">
+        <div class="bg-[#233329] border-2 border-amber-300/60 rounded-3xl p-5 max-w-lg w-full text-white shadow-2xl max-h-[88vh] flex flex-col">
+            <div class="flex items-center justify-between pb-3 border-b border-white/15">
+                <div class="flex items-center gap-2">
+                    <span class="text-xl">📦</span>
+                    <h3 class="text-lg font-black text-amber-300">导出 GitHub Android 原生工程包 (.zip)</h3>
+                </div>
+                <button id="closeApkModal" class="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center text-white font-bold">✕</button>
+            </div>
+            
+            <div class="overflow-y-auto py-3 space-y-4 text-xs leading-relaxed text-emerald-50/90 pr-1">
+                <div class="p-3.5 rounded-2xl bg-gradient-to-r from-amber-500/25 to-emerald-500/20 border border-amber-300/50 flex flex-col gap-2.5">
+                    <div class="font-black text-amber-300 text-sm flex items-center gap-1.5">
+                        <span>🚀</span>
+                        <span>一键生成完整 Android 原生工程压缩包</span>
+                    </div>
+                    <p class="text-emerald-50/90 text-xs">点击下方按钮将直接打包下载 <code class="text-amber-300 font-mono font-bold">ScrewPuzzle-Android-GitHub.zip</code>，内含原生 Java 源码、Gradle 配置文件、自适应桌面图标以及 <b>GitHub Actions 云端自动编译脚本</b>：</p>
+                    <button id="downloadAndroidZipBtn" class="game-btn w-full py-3.5 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-black text-sm flex items-center justify-center gap-2 shadow-lg border border-amber-200"><span>⏳ 正在打包 Android 原生工程...</span></button>
+                    <button id="downloadHtmlBtn" class="game-btn w-full py-2 rounded-xl bg-white/10 hover:bg-white/20 text-emerald-100 font-bold text-xs flex items-center justify-center gap-1.5 border border-white/15">
+                        <span>📄 仅下载单文件网页包 (index.html)</span>
+                    </button>
+                </div>
+
+                <div class="space-y-2">
+                    <h4 class="font-black text-amber-200 text-sm">🛠️ 如何在 GitHub 仓库自动编译出 APK？</h4>
+                    <ol class="list-decimal list-inside space-y-1.5 bg-black/25 p-3 rounded-xl border border-white/10">
+                        <li>解压下载好的 <code class="text-amber-300 font-mono">ScrewPuzzle-Android-GitHub.zip</code>。</li>
+                        <li>在 GitHub 新建一个仓库，把解压出来的所有文件夹（包含 <code class="text-amber-300 font-mono">.github</code>、<code class="text-amber-300 font-mono">app</code>、<code class="text-amber-300 font-mono">build.gradle</code> 等）上传并 Push 到仓库。</li>
+                        <li>点击 GitHub 仓库顶部的 <b>「Actions」</b> 标签页，工作流会自动开始编译，约 1~2 分钟完成后即可在 <b>Artifacts</b> 处直接下载编译好的 <code class="text-amber-300 font-mono">ScrewPuzzle-debug.apk</code> 与签名版 <code class="text-amber-300 font-mono">ScrewPuzzle-release-signed.apk</code>！</li>
+                    </ol>
+                </div>
+
+                <div class="space-y-1.5">
+                    <h4 class="font-black text-amber-200 text-sm">📂 工程包内置目录结构一览：</h4>
+                    <pre class="bg-black/40 p-3 rounded-xl border border-white/10 font-mono text-[11px] text-emerald-200 overflow-x-auto leading-tight">ScrewPuzzle-Android/
+├── .github/workflows/build-apk.yml  (GitHub Actions 自动构建 APK)
+├── app/
+│   ├── build.gradle                 (App 模块构建配置, SDK 34)
+│   └── src/main/
+│       ├── AndroidManifest.xml      (全屏沉浸式、竖屏锁定配置)
+│       ├── assets/index.html        (完整《拧螺丝解压工坊》游戏引擎)
+│       ├── java/com/workshop/screwpuzzle/MainActivity.java
+│       └── res/                     (矢量自适应图标、主题与字符串)
+├── build.gradle                     (根项目 AGP 8.2.2 配置)
+├── gradle.properties                (AndroidX 与 JVM 内存优化)
+├── settings.gradle                  (工程模块声明)
+└── README.md                        (GitHub 与 Android Studio 编译指南)</pre>
+                </div>
+            </div>
+
+            <div class="pt-3 border-t border-white/15 flex justify-end gap-2">
+                <button id="copySourceBtn" class="game-btn px-4 py-2 rounded-xl bg-white/15 hover:bg-white/25 text-white text-xs font-bold border border-white/20">
+                    📋 复制单文件源码
+                </button>
+                <button id="closeApkModalBtn" class="game-btn px-5 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-black">
+                    返回游戏
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 游戏主画布 -->
+    <canvas id="gameCanvas" width="948" height="828"></canvas>
+
+    <script>
+        /**
+         * 《拧螺丝解压工坊》核心引擎
+         * 1:1 复刻原图：鼠尾草绿手绘树叶背景 + 木纹手掌底板 + 紫银光泽金属片 + 十字螺丝 + 动态3D螺丝刀 + 物理单钉悬挂旋转与全拆掉落
+         */
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // 音效合成器 (Web Audio API 纯代码发声，零外部音频依赖)
+        class SoundEngine {
+            constructor() {
+                this.ctx = null;
+                this.enabled = true;
+            }
+            init() {
+                if (!this.ctx) {
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    if (AudioCtx) this.ctx = new AudioCtx();
+                }
+                if (this.ctx && this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+            // 拧螺丝清脆棘轮声 + 弹出声
+            playUnscrew() {
+                if (!this.enabled) return;
+                this.init();
+                if (!this.ctx) return;
+
+                const now = this.ctx.currentTime;
+                // 3声快速旋转摩擦音
+                for (let i = 0; i < 3; i++) {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(320 + i * 140, now + i * 0.055);
+                    osc.frequency.exponentialRampToValueAtTime(680 + i * 160, now + i * 0.055 + 0.045);
+
+                    gain.gain.setValueAtTime(0.16, now + i * 0.055);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.055 + 0.05);
+
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now + i * 0.055);
+                    osc.stop(now + i * 0.055 + 0.05);
+                }
+
+                // 螺丝拔出清脆 "啵" 声
+                const popOsc = this.ctx.createOscillator();
+                const popGain = this.ctx.createGain();
+                popOsc.type = 'sine';
+                popOsc.frequency.setValueAtTime(520, now + 0.16);
+                popOsc.frequency.exponentialRampToValueAtTime(980, now + 0.25);
+                popGain.gain.setValueAtTime(0.22, now + 0.16);
+                popGain.gain.exponentialRampToValueAtTime(0.001, now + 0.26);
+                popOsc.connect(popGain);
+                popGain.connect(this.ctx.destination);
+                popOsc.start(now + 0.16);
+                popOsc.stop(now + 0.26);
+            }
+            // 金属片掉落清脆碰撞声
+            playMetalDrop() {
+                if (!this.enabled) return;
+                this.init();
+                if (!this.ctx) return;
+
+                const now = this.ctx.currentTime + 0.12;
+                const freqs = [440, 880, 1320, 1760];
+                freqs.forEach((f, idx) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = idx % 2 === 0 ? 'sine' : 'triangle';
+                    osc.frequency.setValueAtTime(f + Math.random() * 60, now);
+                    osc.frequency.exponentialRampToValueAtTime(f * 0.72, now + 0.32);
+
+                    gain.gain.setValueAtTime(0.12 / (idx + 1), now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.35);
+                });
+            }
+            // 金属片相互碰撞/卡住时的清脆金属铛声 (带冷却防抖)
+            playMetalClank(intensity = 1.0) {
+                if (!this.enabled) return;
+                this.init();
+                if (!this.ctx) return;
+
+                const nowMs = performance.now();
+                if (this.lastClankMs && nowMs - this.lastClankMs < 65) return;
+                this.lastClankMs = nowMs;
+
+                const now = this.ctx.currentTime;
+                const vol = Math.min(0.22, Math.max(0.03, intensity * 0.14));
+                const baseFreq = 580 + Math.random() * 240;
+
+                [baseFreq, baseFreq * 1.62, baseFreq * 2.45].forEach((f, i) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = i === 0 ? 'triangle' : 'sine';
+                    osc.frequency.setValueAtTime(f, now);
+                    osc.frequency.exponentialRampToValueAtTime(f * 0.86, now + 0.09);
+
+                    gain.gain.setValueAtTime(vol / (i + 1), now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.095);
+
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.1);
+                });
+            }
+            // 通关欢快和弦
+            playWin() {
+                if (!this.enabled) return;
+                this.init();
+                if (!this.ctx) return;
+
+                const notes = [523.25, 659.25, 783.99, 1046.5];
+                notes.forEach((n, idx) => {
+                    const now = this.ctx.currentTime + idx * 0.09;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(n, now);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.46);
+                });
+            }
+        }
+
+        const sound = new SoundEngine();
+
+        // 逻辑坐标系尺寸 (适配任意手机屏幕比例)
+        const DESIGN_W = 500;
+        const DESIGN_H = 850;
+        let viewScale = 1;
+        let offsetX = 0;
+        let offsetY = 0;
+
+        // 当前关卡与游戏状态全局变量
+        const MAX_CLICKS = 2;
+        let remainingClicks = MAX_CLICKS;
+        let currentLevelIndex = 0;
+        let plates = [];
+        let baseHoles = [];
+        let detachedScrews = [];
+        let sparkles = [];
+        let floatingTexts = [];
+        let totalScrewsCount = 0;
+        let removedScrewsCount = 0;
+        let levelWon = false;
+        let lastActionSnapshot = null;
+        let toastTimer = null;
+
+        // 3D 螺丝刀状态
+        const screwdriver = {
+            x: 415,
+            y: 665,
+            targetX: 415,
+            targetY: 665,
+            active: false,
+            timer: 0,
+            maxTimer: 16,
+            spinAngle: 0
+        };
+
+        // 背景手绘植物线稿坐标分布
+        const botanicalClusters = [
+            { x: 210, y: 45, scale: 0.85, rot: -0.35 },
+            { x: 35, y: 225, scale: 0.95, rot: 0.45 },
+            { x: 435, y: 190, scale: 1.05, rot: -0.4 },
+            { x: 145, y: 315, scale: 0.9, rot: -0.25 },
+            { x: 380, y: 580, scale: 0.95, rot: 0.35 },
+            { x: 115, y: 740, scale: 1.1, rot: -0.2 }
+        ];
+
+        // 关卡定义数据（恢复第一版：1:1 原图复刻的指节与手掌贴合块形状）
+        function getLevelConfig(levelIdx) {
+            if (levelIdx === 0) {
+                // 第 1 关：第一版 1:1 复刻原图（木手掌 + 17块贴合指节/手掌的紫银金属贴片 + 独立木板螺丝）
+                return {
+                    name: '机械手掌 · 原版复刻',
+                    drawBaseSilhoutte: (ctx) => {
+                        ctx.beginPath();
+                        ctx.moveTo(212, 635); // 手腕左侧
+                        ctx.lineTo(212, 588);
+                        ctx.quadraticCurveTo(162, 552, 128, 495); // 拇指根部外侧
+                        ctx.quadraticCurveTo(96, 442, 82, 405);
+                        ctx.quadraticCurveTo(68, 378, 86, 366); // 拇指尖
+                        ctx.quadraticCurveTo(108, 355, 134, 392);
+                        ctx.quadraticCurveTo(152, 420, 165, 448); // 虎口
+                        ctx.lineTo(164, 305); // 食指左侧
+                        ctx.quadraticCurveTo(160, 248, 185, 245); // 食指尖
+                        ctx.quadraticCurveTo(210, 245, 212, 305);
+                        ctx.lineTo(222, 382); // 食指与中指缝
+                        ctx.lineTo(246, 245); // 中指左侧
+                        ctx.quadraticCurveTo(248, 200, 272, 200); // 中指尖
+                        ctx.quadraticCurveTo(295, 200, 296, 245);
+                        ctx.lineTo(298, 382); // 中指与无名指缝
+                        ctx.lineTo(322, 258); // 无名指左侧
+                        ctx.quadraticCurveTo(328, 218, 350, 222); // 无名指尖
+                        ctx.quadraticCurveTo(372, 226, 368, 268);
+                        ctx.lineTo(356, 395); // 无名指与小指缝
+                        ctx.lineTo(388, 308); // 小指左侧
+                        ctx.quadraticCurveTo(402, 284, 420, 292); // 小指尖
+                        ctx.quadraticCurveTo(438, 300, 428, 336);
+                        ctx.lineTo(398, 448); // 小指外侧
+                        ctx.quadraticCurveTo(386, 528, 356, 582); // 手掌右侧边缘
+                        ctx.lineTo(354, 635); // 手腕右侧
+                        ctx.quadraticCurveTo(283, 646, 212, 635);
+                        ctx.closePath();
+                    },
+                    standaloneScrews: [],
+                    exposedWoodHoles: [
+                        { x: 202, y: 486 }  // 原图中半圆形缺口露出的木孔
+                    ],
+                    plates: [
+                        // 1. 拇指上下两节融合块 (2颗螺丝)
+                        {
+                            pts: [[79,382],[95,366],[118,374],[138,408],[166,454],[132,486],[104,432],[102,428]],
+                            screws: [[110, 397], [138, 448]]
+                        },
+                        // 2. 食指上节+中节融合块 (2颗螺丝)
+                        {
+                            pts: [[166,282],[174,250],[198,250],[208,282],[212,308],[216,348],[172,352],[168,308]],
+                            screws: [[188, 282], [192, 330]]
+                        },
+                        // 3. 食指下节+食指根融合块 (2颗螺丝)
+                        {
+                            pts: [[172,356],[218,352],[222,392],[232,392],[238,434],[190,432],[180,402],[176,396]],
+                            screws: [[198, 374], [212, 414]]
+                        },
+                        // 4. 中指上节+中节融合块 (2颗螺丝)
+                        {
+                            pts: [[250,235],[260,204],[284,204],[294,235],[295,318],[250,318]],
+                            screws: [[272, 240], [272, 296]]
+                        },
+                        // 5. 中指下节+中指根融合块 (2颗螺丝)
+                        {
+                            pts: [[250,323],[295,323],[298,374],[292,432],[252,430],[242,374],[249,368]],
+                            screws: [[272, 345], [272, 402]]
+                        },
+                        // 6. 无名指上节+中节融合块 (2颗螺丝)
+                        {
+                            pts: [[328,255],[338,225],[360,228],[366,258],[362,296],[358,338],[318,334],[325,282]],
+                            screws: [[346, 258], [340, 315]]
+                        },
+                        // 7. 无名指下节+无名指根融合块 (2颗螺丝)
+                        {
+                            pts: [[318,340],[357,344],[352,386],[348,395],[340,442],[298,434],[306,386],[312,382]],
+                            screws: [[335, 362], [324, 415]]
+                        },
+                        // 8. 小指上节+中节融合块 (2颗螺丝)
+                        {
+                            pts: [[392,312],[406,290],[426,296],[426,322],[414,348],[412,354],[400,392],[370,382],[384,338]],
+                            screws: [[408, 320], [392, 368]]
+                        },
+                        // 9. 小指下节+小指根融合块 (2颗螺丝)
+                        {
+                            pts: [[368,388],[398,398],[386,440],[378,476],[334,462],[352,428],[355,424]],
+                            screws: [[377, 412], [360, 452]]
+                        },
+                        // 10. 掌心中左斜块 (原双螺丝保留)
+                        {
+                            pts: [[172,432],[242,442],[258,482],[168,468]],
+                            screws: [[196, 450], [230, 462]]
+                        },
+                        // 11. 掌心中右块 (原双螺丝保留)
+                        {
+                            pts: [[322,468],[382,480],[376,515],[306,502]],
+                            screws: [[336, 492], [362, 496]]
+                        },
+                        // 12. 掌心中央+带半圆缺口横条融合块 (2颗螺丝)
+                        {
+                            pts: [[162,475],[258,482],[260,438],[310,444],[306,474],[272,516],[218,518],[212,492],[192,492],[188,514],[160,502]],
+                            screws: [[285, 454], [244, 502]]
+                        },
+                        // 13. 掌心下右横条 (原双螺丝保留)
+                        {
+                            pts: [[274,504],[375,520],[368,552],[276,540]],
+                            screws: [[306, 524], [344, 532]]
+                        },
+                        // 14. 左下虎口与手腕左侧融合块 (2颗螺丝)
+                        {
+                            pts: [[142,498],[194,506],[198,536],[252,542],[248,576],[196,570],[152,532]],
+                            screws: [[170, 515], [229, 552]]
+                        },
+                        // 15. 手腕右下角底座贴片 (2颗螺丝)
+                        {
+                            pts: [[266,546],[365,556],[354,592],[262,588]],
+                            screws: [[292, 568], [336, 570]]
+                        }
+                    ]
+                };
+            } else if (levelIdx === 1) {
+                // 第 2 关：机械之心（所有金属块均为 2 颗螺丝）
+                return {
+                    name: '机械之心 · 双钉对称装甲',
+                    drawBaseSilhoutte: (ctx) => {
+                        ctx.beginPath();
+                        ctx.moveTo(250, 610);
+                        ctx.bezierCurveTo(110, 500, 65, 360, 90, 270);
+                        ctx.bezierCurveTo(115, 195, 210, 200, 250, 265);
+                        ctx.bezierCurveTo(290, 200, 385, 195, 410, 270);
+                        ctx.bezierCurveTo(435, 360, 390, 500, 250, 610);
+                        ctx.closePath();
+                    },
+                    standaloneScrews: [],
+                    exposedWoodHoles: [],
+                    plates: [
+                        { pts: [[110,255],[185,230],[220,275],[125,310]], screws: [[145,272],[188,262]] },
+                        { pts: [[390,255],[315,230],[280,275],[375,310]], screws: [[355,272],[312,262]] },
+                        { pts: [[222,276],[278,276],[274,348],[226,348]], screws: [[250,295],[250,330]] },
+                        { pts: [[105,320],[215,295],[222,355],[115,375]], screws: [[148,342],[196,330]] },
+                        { pts: [[395,320],[285,295],[278,355],[385,375]], screws: [[352,342],[304,330]] },
+                        { pts: [[125,388],[235,368],[235,425],[145,442]], screws: [[168,410],[212,400]] },
+                        { pts: [[375,388],[265,368],[265,425],[355,442]], screws: [[332,410],[288,400]] },
+                        { pts: [[160,455],[340,455],[315,512],[185,512]], screws: [[212,482],[288,482]] },
+                        { pts: [[196,524],[304,524],[276,584],[224,584]], screws: [[232,552],[268,552]] }
+                    ]
+                };
+            } else {
+                // 第 3 关：皇家装甲盾（所有金属块均为 2 颗螺丝）
+                return {
+                    name: '皇家装甲盾 · 双钉重装锁扣',
+                    drawBaseSilhoutte: (ctx) => {
+                        ctx.beginPath();
+                        ctx.moveTo(250, 195);
+                        ctx.lineTo(405, 245);
+                        ctx.quadraticCurveTo(415, 465, 250, 625);
+                        ctx.quadraticCurveTo(85, 465, 95, 245);
+                        ctx.closePath();
+                    },
+                    standaloneScrews: [],
+                    exposedWoodHoles: [],
+                    plates: [
+                        { pts: [[202,210],[298,210],[290,256],[210,256]], screws: [[230,234],[270,234]] },
+                        { pts: [[115,265],[225,255],[225,315],[115,325]], screws: [[148,292],[198,288]] },
+                        { pts: [[385,265],[275,255],[275,315],[385,325]], screws: [[352,292],[302,288]] },
+                        { pts: [[120,340],[235,330],[235,390],[128,400]], screws: [[155,368],[208,362]] },
+                        { pts: [[380,340],[265,330],[265,390],[372,400]], screws: [[345,368],[292,362]] },
+                        { pts: [[135,415],[365,415],[350,472],[150,472]], screws: [[195,442],[305,442]] },
+                        { pts: [[162,486],[338,486],[308,542],[192,542]], screws: [[215,514],[285,514]] },
+                        { pts: [[198,550],[302,550],[272,604],[228,604]], screws: [[232,575],[268,575]] }
+                    ]
+                };
+            }
+        }
+
+        // 初始化关卡数据
+        function initLevel(levelIdx) {
+            currentLevelIndex = levelIdx;
+            const config = getLevelConfig(levelIdx);
+            plates = [];
+            baseHoles = [];
+            detachedScrews = [];
+            sparkles = [];
+            floatingTexts = [];
+            totalScrewsCount = 0;
+            removedScrewsCount = 0;
+            levelWon = false;
+            remainingClicks = MAX_CLICKS;
+            lastActionSnapshot = null;
+
+            document.getElementById('levelBadge').textContent = `第 ${levelIdx + 1} 关`;
+            document.getElementById('levelNameText').textContent = config.name;
+            document.querySelectorAll('.level-tab').forEach((btn, idx) => {
+                if (idx === levelIdx) {
+                    btn.className = 'level-tab game-btn px-2.5 py-1 rounded-lg text-xs font-bold bg-purple-400/40 text-white border border-purple-200/60';
+                } else {
+                    btn.className = 'level-tab game-btn px-2.5 py-1 rounded-lg text-xs font-bold bg-white/10 text-emerald-100/80 border border-transparent';
+                }
+            });
+
+            // 隐藏通关弹窗
+            const winModal = document.getElementById('winModal');
+            winModal.classList.add('hidden', 'opacity-0');
+
+            // 添加原图已露出的空木孔
+            config.exposedWoodHoles.forEach(h => {
+                baseHoles.push({ x: h.x, y: h.y, hasStandaloneScrew: false });
+            });
+
+            // 添加木板上的独立螺丝
+            config.standaloneScrews.forEach(s => {
+                baseHoles.push({
+                    x: s.x,
+                    y: s.y,
+                    hasStandaloneScrew: true,
+                    rot: (Math.random() - 0.5) * 0.8
+                });
+                totalScrewsCount++;
+            });
+
+            // 构建每块金属片与片上螺丝（恢复第一版原版多边形轮廓）
+            config.plates.forEach((p, idx) => {
+                // 计算几何中心
+                let cx = 0, cy = 0;
+                p.pts.forEach(pt => { cx += pt[0]; cy += pt[1]; });
+                cx /= p.pts.length;
+                cy /= p.pts.length;
+
+                const screwObjs = p.screws.map(sc => {
+                    totalScrewsCount++;
+                    baseHoles.push({ x: sc[0], y: sc[1], hasStandaloneScrew: false });
+                    return {
+                        x: sc[0],
+                        y: sc[1],
+                        localX: sc[0] - cx,
+                        localY: sc[1] - cy,
+                        removed: false,
+                        rot: (Math.random() - 0.5) * 0.9
+                    };
+                });
+
+                plates.push({
+                    id: idx,
+                    cx,
+                    cy,
+                    x: cx,
+                    y: cy,
+                    angle: 0,
+                    angularVel: 0,
+                    vx: 0,
+                    vy: 0,
+                    isJammed: false,
+                    isSleeping: false, // 弹跳2下后完全静止休眠标志
+                    bounceCount: 0,    // 当前被卡住时的弹跳计数（满2次即休眠）
+                    bounceCooldown: 0, // 防止同一帧重复计数的冷却帧
+                    pivotHitCount: 0,  // 单颗螺丝摆动撞击计数
+                    jamFlash: 0,
+                    state: 'pinned', // 'pinned' | 'pivoting' | 'falling' | 'gone'
+                    pivotScrew: null,
+                    localPts: p.pts.map(pt => [pt[0] - cx, pt[1] - cy]),
+                    cutoutHole: p.cutoutHole ? [p.cutoutHole[0] - cx, p.cutoutHole[1] - cy] : null,
+                    screws: screwObjs,
+                    zOrder: idx,
+                    bevelSeed: (idx * 37) % 100
+                });
+            });
+
+            updateClickQuotaUI(false);
+            updateProgressUI();
+        }
+
+        // 判断当前是否有金属块正在下落途中（尚未掉出屏幕且尚未静止休眠）
+        function hasActivelyFallingPlate() {
+            return plates.some(p => p.state === 'falling' && !p.isSleeping);
+        }
+
+        // 更新顶部 2 次点击限制 UI 与底部状态提示
+        function updateClickQuotaUI(showResetBanner = false) {
+            const slotsEl = document.getElementById('clickSlots');
+            const quotaText = document.getElementById('clickQuotaText');
+            const resetToast = document.getElementById('resetToast');
+            const fallingWaitBadge = document.getElementById('fallingWaitBadge');
+            const bottomHint = document.getElementById('bottomHintText');
+            const bottomUndoBtn = document.getElementById('bottomUndoBtn');
+
+            let slotsHtml = '';
+            for (let i = 0; i < MAX_CLICKS; i++) {
+                if (i < remainingClicks) {
+                    slotsHtml += `<span class="w-5 h-5 rounded-full bg-amber-400 text-slate-950 font-black text-xs flex items-center justify-center shadow transition-transform scale-100">🔩</span>`;
+                } else {
+                    slotsHtml += `<span class="w-5 h-5 rounded-full bg-white/10 text-white/30 font-black text-xs flex items-center justify-center border border-white/15 scale-90">✕</span>`;
+                }
+            }
+            slotsEl.innerHTML = slotsHtml;
+
+            const waitingForFall = hasActivelyFallingPlate();
+            if (waitingForFall) {
+                fallingWaitBadge.classList.remove('hidden');
+            } else {
+                fallingWaitBadge.classList.add('hidden');
+            }
+
+            if (bottomUndoBtn) {
+                bottomUndoBtn.disabled = !lastActionSnapshot;
+                bottomUndoBtn.className = lastActionSnapshot
+                    ? 'game-btn flex-1 py-3 rounded-xl bg-rose-500/85 hover:bg-rose-400 text-white font-bold text-sm flex items-center justify-center gap-1.5 border border-rose-200/50 shadow-lg'
+                    : 'game-btn flex-1 py-3 rounded-xl bg-white/10 text-white/40 font-bold text-sm flex items-center justify-center gap-1.5 border border-white/10 cursor-not-allowed';
+            }
+
+            if (remainingClicks > 0) {
+                quotaText.textContent = `${remainingClicks} / ${MAX_CLICKS} 次`;
+                quotaText.className = 'text-xs font-black text-amber-300';
+                bottomHint.innerHTML = `<b>从下往上拆</b>：金属块<b>完全掉出屏幕外</b>才重置为 2 次点击！`;
+            } else if (waitingForFall) {
+                quotaText.textContent = `0 / ${MAX_CLICKS} 次 (下落中...)`;
+                quotaText.className = 'text-xs font-black text-amber-200 animate-pulse';
+                bottomHint.innerHTML = `<span class="text-amber-200 font-bold">⏳ 金属块正在下落，完全掉出屏幕底部后将自动重置为 2 次！</span>`;
+            } else {
+                quotaText.textContent = `0 / ${MAX_CLICKS} 次 (次数耗尽)`;
+                quotaText.className = 'text-xs font-black text-rose-400 animate-pulse';
+                bottomHint.innerHTML = `<span class="text-rose-300 font-bold">⚠️ 金属块被下方卡住未掉出屏幕！请点击下方【撤销上一步】或【重置】</span>`;
+            }
+
+            if (showResetBanner) {
+                resetToast.classList.remove('opacity-0');
+                if (toastTimer) clearTimeout(toastTimer);
+                toastTimer = setTimeout(() => {
+                    resetToast.classList.add('opacity-0');
+                }, 1600);
+            }
+        }
+
+        // 重置点击次数为 2 次（严格仅在金属块完全掉出屏幕底部边界时调用）
+        function resetClickQuota(worldX, worldY, reasonText = '+重置为 2/2 次!') {
+            remainingClicks = MAX_CLICKS;
+            updateClickQuotaUI(true);
+
+            if (typeof worldX === 'number' && typeof worldY === 'number') {
+                floatingTexts.push({
+                    x: Math.max(90, Math.min(DESIGN_W - 90, worldX)),
+                    y: Math.min(DESIGN_H - 90, worldY),
+                    text: reasonText,
+                    alpha: 1.0,
+                    vy: -1.6
+                });
+            }
+        }
+
+        // 保存当前操作前的快照，以便玩家点错上层螺丝被卡住时一键撤销
+        function saveActionSnapshot() {
+            if (! window.undoStack) window.undoStack = [];
+            const snap = {
+                remainingClicks,
+                removedScrewsCount,
+                baseHolesState: baseHoles.map(h => ({ hasStandaloneScrew: h.hasStandaloneScrew, rot: h.rot })),
+                platesState: plates.map(p => ({
+                    x: p.x,
+                    y: p.y,
+                    angle: p.angle,
+                    angularVel: p.angularVel,
+                    vx: p.vx,
+                    vy: p.vy,
+                    isJammed: p.isJammed,
+                    isSleeping: p.isSleeping,
+                    bounceCount: p.bounceCount,
+                    bounceCooldown: p.bounceCooldown,
+                    pivotHitCount: p.pivotHitCount,
+                    state: p.state,
+                    pivotScrewIdx: p.pivotScrew ? p.screws.indexOf(p.pivotScrew) : -1,
+                    screwsRemoved: p.screws.map(s => s.removed)
+                }))
+            };
+            window.undoStack.push(snap);
+            lastActionSnapshot = snap;
+        }
+
+        // 恢复上一步快照
+        function undoLastAction() {
+            if (!window.undoStack || window.undoStack.length === 0) return;
+            const snap = window.undoStack.pop();
+            lastActionSnapshot = window.undoStack.length > 0 ? window.undoStack[window.undoStack.length - 1] : null;
+
+            remainingClicks = snap.remainingClicks;
+            removedScrewsCount = snap.removedScrewsCount;
+            snap.baseHolesState.forEach((st, idx) => {
+                baseHoles[idx].hasStandaloneScrew = st.hasStandaloneScrew;
+                baseHoles[idx].rot = st.rot;
+            });
+            snap.platesState.forEach((st, idx) => {
+                const p = plates[idx];
+                p.x = st.x;
+                p.y = st.y;
+                p.angle = st.angle;
+                p.angularVel = st.angularVel;
+                p.vx = st.vx;
+                p.vy = st.vy;
+                p.isJammed = st.isJammed;
+                p.isSleeping = st.isSleeping;
+                p.bounceCount = st.bounceCount;
+                p.bounceCooldown = st.bounceCooldown;
+                p.pivotHitCount = st.pivotHitCount;
+                p.state = st.state;
+                st.screwsRemoved.forEach((rem, sIdx) => {
+                    p.screws[sIdx].removed = rem;
+                });
+                p.pivotScrew = st.pivotScrewIdx >= 0 ? p.screws[st.pivotScrewIdx] : null;
+            });
+            updateClickQuotaUI(false);
+            updateProgressUI();
+        }
+
+        // 更新进度条与剩余金属片计数（所有金属片全部掉落消失才算通关）
+        function updateProgressUI() {
+            const totalPlatesCount = plates.length;
+            const gonePlatesCount = plates.filter(p => p.state === 'gone').length;
+            const pct = totalPlatesCount > 0 ? Math.min(100, Math.round((gonePlatesCount / totalPlatesCount) * 100)) : 0;
+            document.getElementById('progressBar').style.width = `${pct}%`;
+            document.getElementById('screwCounter').textContent = `${gonePlatesCount}/${totalPlatesCount} 片`;
+
+            if (!levelWon && totalPlatesCount > 0 && gonePlatesCount >= totalPlatesCount) {
+                levelWon = true;
+                setTimeout(() => {
+                    sound.playWin();
+                    const winModal = document.getElementById('winModal');
+                    const winCard = document.getElementById('winCard');
+                    winModal.classList.remove('hidden');
+                    requestAnimationFrame(() => {
+                        winModal.classList.remove('opacity-0');
+                        winCard.classList.remove('scale-95');
+                        winCard.classList.add('scale-100');
+                    });
+                }, 350);
+            }
+        }
+
+        // 触发拧下螺丝动作
+        function triggerUnscrew(screwObj, parentPlate, isStandalone = false) {
+            if (remainingClicks <= 0) {
+                // 闪烁提醒次数耗尽
+                const quotaText = document.getElementById('clickQuotaText');
+                quotaText.classList.remove('animate-pulse');
+                void quotaText.offsetWidth;
+                quotaText.classList.add('animate-pulse');
+                return;
+            }
+
+            // 保存快照并扣减 1 次点击
+            saveActionSnapshot();
+            remainingClicks--;
+
+            sound.playUnscrew();
+            removedScrewsCount++;
+
+            let worldX = screwObj.x;
+            let worldY = screwObj.y;
+
+            if (parentPlate) {
+                const cos = Math.cos(parentPlate.angle);
+                const sin = Math.sin(parentPlate.angle);
+                worldX = parentPlate.x + screwObj.localX * cos - screwObj.localY * sin;
+                worldY = parentPlate.y + screwObj.localX * sin + screwObj.localY * cos;
+                screwObj.removed = true;
+            } else if (isStandalone) {
+                screwObj.hasStandaloneScrew = false;
+            }
+
+            // 激活 3D 螺丝刀动画
+            screwdriver.active = true;
+            screwdriver.targetX = worldX;
+            screwdriver.targetY = worldY;
+            screwdriver.timer = screwdriver.maxTimer;
+
+            // 生成飞出的螺丝动画粒子
+            detachedScrews.push({
+                x: worldX,
+                y: worldY,
+                vx: (Math.random() - 0.5) * 5,
+                vy: -4.5 - Math.random() * 2.5,
+                scale: 1.0,
+                rot: screwObj.rot || 0,
+                vRot: 0.38,
+                alpha: 1.0
+            });
+
+            // 生成金属星光粒子
+            for (let i = 0; i < 10; i++) {
+                const ang = (Math.PI * 2 * i) / 10 + Math.random() * 0.3;
+                const spd = 2 + Math.random() * 4;
+                sparkles.push({
+                    x: worldX,
+                    y: worldY,
+                    vx: Math.cos(ang) * spd,
+                    vy: Math.sin(ang) * spd,
+                    r: 2.5 + Math.random() * 2.5,
+                    alpha: 1,
+                    color: i % 2 === 0 ? '#f5d0fe' : '#fde68a'
+                });
+            }
+
+            let plateJustDetached = false;
+
+            // 检查所属金属片的剩余螺丝状态
+            if (parentPlate) {
+                const remaining = parentPlate.screws.filter(s => !s.removed);
+                if (remaining.length === 1) {
+                    // 仅剩 1 颗螺丝时：金属片受重力绕该螺丝悬挂微幅摆动！
+                    parentPlate.state = 'pivoting';
+                    parentPlate.pivotScrew = remaining[0];
+                    parentPlate.isSleeping = false;
+                    parentPlate.pivotHitCount = 0;
+                    parentPlate.angularVel = (parentPlate.cx >= remaining[0].x ? 1 : -1) * 0.015;
+                } else if (remaining.length === 0) {
+                    // 螺丝全部拧完：金属片开始下落（注意：此时不重置点击次数，必须等它完全掉出屏幕底部才重置！）
+                    parentPlate.state = 'falling';
+                    parentPlate.pivotScrew = null;
+                    parentPlate.isSleeping = false;
+                    parentPlate.isJammed = false;
+                    parentPlate.bounceCount = 0;
+                    parentPlate.bounceCooldown = 0;
+                    parentPlate.vy = 1.2;
+                    parentPlate.vx = 0;
+                    parentPlate.angularVel = (Math.random() - 0.5) * 0.012;
+                }
+            }
+
+            // 检测所有正在休眠静止的金属块是否因下方支点消失而需要唤醒继续自由落体
+            WakeUpUnsupportedPlates();
+            updateClickQuotaUI(false);
+            updateProgressUI();
+        }
+
+        // 检测所有已静止休眠 (isSleeping) 的金属片下方是否仍有支撑物；若下方金属片掉落/移开失去支点，则立即唤醒恢复自由落体！
+        function WakeUpUnsupportedPlates() {
+            let wokeAny = false;
+            // 按从下往上的顺序循环检查，支持连锁唤醒多层堆叠的金属块
+            let changed = true;
+            let guard = 0;
+            while (changed && guard < 15) {
+                changed = false;
+                guard++;
+
+                for (let i = 0; i < plates.length; i++) {
+                    const p = plates[i];
+                    if (p.state !== 'falling' || !p.isSleeping) continue;
+
+                    // 将该金属片虚拟向下试探 4.5 像素，检测下方是否还有稳定的支撑障碍物
+                    const testPlate = {
+                        x: p.x,
+                        y: p.y + 4.5,
+                        angle: p.angle,
+                        localPts: p.localPts
+                    };
+                    const testPoly = getWorldPolygon(testPlate);
+                    let stillSupported = false;
+
+                    // 1. 检查下方是否有 pinned / pivoting / 同样处于 sleeping 的金属块支撑它
+                    for (let j = 0; j < plates.length; j++) {
+                        if (i === j) continue;
+                        const other = plates[j];
+                        if (other.state === 'gone') continue;
+                        // 如果下方金属块正在自由下落 (falling 且非 sleeping)，则不能作为稳定支点！
+                        const otherIsStable =
+                            other.state === 'pinned' ||
+                            other.state === 'pivoting' ||
+                            (other.state === 'falling' && other.isSleeping);
+                        if (!otherIsStable) continue;
+
+                        const otherPoly = getWorldPolygon(other);
+                        const col = detectPolygonCollision(testPoly, otherPoly);
+                        if (col) {
+                            // 确认障碍物确实位于当前金属片下方或斜下方
+                            let ny = col.axis.y;
+                            const dirY = testPlate.y - other.y;
+                            if ((testPlate.x - other.x) * col.axis.x + dirY * ny < 0) {
+                                ny = -ny;
+                            }
+                            if (ny < -0.15 || other.y > p.y - 10) {
+                                stillSupported = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    // 2. 检查下方是否有未拆卸的独立木板螺丝支撑它
+                    if (!stillSupported) {
+                        for (let k = 0; k < baseHoles.length; k++) {
+                            const h = baseHoles[k];
+                            if (!h.hasStandaloneScrew) continue;
+                            const scCol = detectPolygonCircleCollision(testPoly, h.x, h.y, 14.5);
+                            if (scCol && h.y >= p.y - 15) {
+                                stillSupported = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    // 一旦失去下方支点，立即解除静止休眠，重新开始自由落体并重置弹跳次数为 0！
+                    if (!stillSupported) {
+                        p.isSleeping = false;
+                        p.isJammed = false;
+                        p.bounceCount = 0;
+                        p.bounceCooldown = 0;
+                        p.settleFrames = 0;
+                        p.vy = Math.max(p.vy, 0.8);
+                        changed = true;
+                        wokeAny = true;
+                    }
+                }
+            }
+            return wokeAny;
+        }
+
+        // 获取金属片当前在世界坐标系下的多边形顶点与包围盒
+        function getWorldPolygon(p) {
+            const cos = Math.cos(p.angle);
+            const sin = Math.sin(p.angle);
+            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+            const pts = p.localPts.map(pt => {
+                const wx = p.x + pt[0] * cos - pt[1] * sin;
+                const wy = p.y + pt[0] * sin + pt[1] * cos;
+                if (wx < minX) minX = wx;
+                if (wx > maxX) maxX = wx;
+                if (wy < minY) minY = wy;
+                if (wy > maxY) maxY = wy;
+                return { x: wx, y: wy };
+            });
+            return { pts, minX, minY, maxX, maxY };
+        }
+
+        // 2D 分离轴定理 (SAT) 多边形碰撞检测：返回最小穿透向量 MTV 及接触点
+        function detectPolygonCollision(polyA, polyB) {
+            // AABB 快速排斥
+            if (polyA.maxX < polyB.minX || polyA.minX > polyB.maxX ||
+                polyA.maxY < polyB.minY || polyA.minY > polyB.maxY) {
+                return null;
+            }
+
+            let minOverlap = Infinity;
+            let smallestAxis = null;
+            const polys = [polyA.pts, polyB.pts];
+
+            for (let pIdx = 0; pIdx < 2; pIdx++) {
+                const vertices = polys[pIdx];
+                const len = vertices.length;
+                for (let i = 0; i < len; i++) {
+                    const p1 = vertices[i];
+                    const p2 = vertices[(i + 1) % len];
+                    const edgeX = p2.x - p1.x;
+                    const edgeY = p2.y - p1.y;
+                    const edgeLen = Math.hypot(edgeX, edgeY);
+                    if (edgeLen < 0.0001) continue;
+
+                    // 法向量
+                    const nx = -edgeY / edgeLen;
+                    const ny = edgeX / edgeLen;
+
+                    let minA = Infinity, maxA = -Infinity;
+                    for (let j = 0; j < polyA.pts.length; j++) {
+                        const proj = polyA.pts[j].x * nx + polyA.pts[j].y * ny;
+                        if (proj < minA) minA = proj;
+                        if (proj > maxA) maxA = proj;
+                    }
+
+                    let minB = Infinity, maxB = -Infinity;
+                    for (let j = 0; j < polyB.pts.length; j++) {
+                        const proj = polyB.pts[j].x * nx + polyB.pts[j].y * ny;
+                        if (proj < minB) minB = proj;
+                        if (proj > maxB) maxB = proj;
+                    }
+
+                    const overlap = Math.min(maxA, maxB) - Math.max(minA, minB);
+                    if (overlap <= 0) {
+                        return null; // 存在分离轴，未发生碰撞
+                    }
+                    if (overlap < minOverlap) {
+                        minOverlap = overlap;
+                        smallestAxis = { x: nx, y: ny };
+                    }
+                }
+            }
+
+            return { overlap: minOverlap, axis: smallestAxis };
+        }
+
+        // 检测多边形金属片与木板独立螺丝柱的碰撞
+        function detectPolygonCircleCollision(poly, cx, cy, radius) {
+            if (cx + radius < poly.minX || cx - radius > poly.maxX ||
+                cy + radius < poly.minY || cy - radius > poly.maxY) {
+                return null;
+            }
+
+            const pts = poly.pts;
+            let closestX = cx;
+            let closestY = cy;
+            let minDistSq = Infinity;
+
+            // 查找多边形边上离圆心最近的点
+            for (let i = 0; i < pts.length; i++) {
+                const p1 = pts[i];
+                const p2 = pts[(i + 1) % pts.length];
+                const dx = p2.x - p1.x;
+                const dy = p2.y - p1.y;
+                const lenSq = dx * dx + dy * dy;
+                let t = lenSq > 0 ? ((cx - p1.x) * dx + (cy - p1.y) * dy) / lenSq : 0;
+                t = Math.max(0, Math.min(1, t));
+                const projX = p1.x + t * dx;
+                const projY = p1.y + t * dy;
+                const dSq = (cx - projX) * (cx - projX) + (cy - projY) * (cy - projY);
+                if (dSq < minDistSq) {
+                    minDistSq = dSq;
+                    closestX = projX;
+                    closestY = projY;
+                }
+            }
+
+            const dist = Math.sqrt(minDistSq);
+            if (dist < radius && dist > 0.0001) {
+                return {
+                    overlap: radius - dist,
+                    axis: { x: (closestX - cx) / dist, y: (closestY - cy) / dist }
+                };
+            }
+            return null;
+        }
+
+        // 射线法判断点 (px, py) 是否位于世界多边形 poly 内部
+        function isPointInWorldPoly(px, py, poly) {
+            if (px < poly.minX || px > poly.maxX || py < poly.minY || py > poly.maxY) return false;
+            const pts = poly.pts;
+            let inside = false;
+            for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
+                const xi = pts[i].x, yi = pts[i].y;
+                const xj = pts[j].x, yj = pts[j].y;
+                const intersect = ((yi > py) !== (yj > py)) &&
+                    (px < (xj - xi) * (py - yi) / (yj - yi + 0.00001) + xi);
+                if (intersect) inside = !inside;
+            }
+            return inside;
+        }
+
+        // 检测某颗螺丝是否被更高层级的其他异形金属板遮挡（若被遮挡则无法直接拧下，会触发金属板抖动提示）
+        function isScrewOccludedByUpperPlate(sx, sy, ownerPlateIndex) {
+            for (let k = ownerPlateIndex + 1; k < plates.length; k++) {
+                const upper = plates[k];
+                if (upper.state === 'gone') continue;
+                const poly = getWorldPolygon(upper);
+                // 螺丝圆心或边缘被上层金属板覆盖达一定程度即视为被遮挡
+                if (isPointInWorldPoly(sx, sy, poly)) {
+                    return upper;
+                }
+                const col = detectPolygonCircleCollision(poly, sx, sy, 8.5);
+                if (col && col.overlap > 3.2) {
+                    return upper;
+                }
+            }
+            return null;
+        }
+
+        // 处理玩家点击/触摸坐标
+        function handlePointerDown(clientX, clientY) {
+            const rect = canvas.getBoundingClientRect();
+            const logicX = (clientX - rect.left - offsetX) / viewScale;
+            const logicY = (clientY - rect.top - offsetY) / viewScale;
+
+            const HIT_RADIUS = 24; // 宽松舒适的触控判定半径
+
+            // 1. 优先检测所有金属片上的未拆卸螺丝（从上层到下层）
+            for (let i = plates.length - 1; i >= 0; i--) {
+                const p = plates[i];
+                if (p.state === 'falling' || p.state === 'gone') continue;
+
+                const cos = Math.cos(p.angle);
+                const sin = Math.sin(p.angle);
+
+                for (let j = 0; j < p.screws.length; j++) {
+                    const s = p.screws[j];
+                    if (s.removed) continue;
+
+                    const sx = p.x + s.localX * cos - s.localY * sin;
+                    const sy = p.y + s.localX * sin + s.localY * cos;
+
+                    const dist = Math.hypot(logicX - sx, logicY - sy);
+                    if (dist <= HIT_RADIUS) {
+                        // 检查该螺丝是否被上方的异形金属板局部遮挡
+                        const blocker = isScrewOccludedByUpperPlate(sx, sy, i);
+                        if (blocker) {
+                            sound.playMetalClank(0.75);
+                            blocker.jamFlash = 8;
+                            floatingTexts.push({
+                                x: sx,
+                                y: sy - 14,
+                                text: '🔒 被上方金属板遮挡！',
+                                alpha: 1.0,
+                                vy: -1.2
+                            });
+                            return;
+                        }
+                        triggerUnscrew(s, p, false);
+                        return;
+                    }
+                }
+            }
+
+            // 2. 检测木手掌底座上的独立螺丝
+            for (let i = 0; i < baseHoles.length; i++) {
+                const h = baseHoles[i];
+                if (h.hasStandaloneScrew) {
+                    const dist = Math.hypot(logicX - h.x, logicY - h.y);
+                    if (dist <= HIT_RADIUS) {
+                        triggerUnscrew(h, null, true);
+                        return;
+                    }
+                }
+            }
+        }
+
+        // 绘制鼠尾草绿墙面纹理与白色植物叶片线稿（复刻原图背景）
+        function drawBotanicalBackground() {
+            ctx.fillStyle = '#678772';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.save();
+            ctx.translate(offsetX, offsetY);
+            ctx.scale(viewScale, viewScale);
+
+            // 绘制柔和暗角与纸质颗粒光感
+            const radGrad = ctx.createRadialGradient(250, 420, 60, 250, 420, 480);
+            radGrad.addColorStop(0, 'rgba(130, 165, 142, 0.25)');
+            radGrad.addColorStop(1, 'rgba(42, 62, 50, 0.35)');
+            ctx.fillStyle = radGrad;
+            ctx.fillRect(-200, -200, DESIGN_W + 400, DESIGN_H + 400);
+
+            // 绘制白色薄荷叶/植物线稿图案
+            ctx.strokeStyle = 'rgba(235, 245, 238, 0.55)';
+            ctx.lineWidth = 1.3;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+
+            botanicalClusters.forEach(cluster => {
+                ctx.save();
+                ctx.translate(cluster.x, cluster.y);
+                ctx.scale(cluster.scale, cluster.scale);
+                ctx.rotate(cluster.rot);
+
+                // 主茎
+                ctx.beginPath();
+                ctx.moveTo(0, 55);
+                ctx.quadraticCurveTo(5, 0, 0, -55);
+                ctx.stroke();
+
+                // 绘制 5 片带叶脉与锯齿边缘的植物叶片
+                const leaves = [
+                    { x: 0, y: -50, ang: 0, len: 48, w: 22 },
+                    { x: 2, y: -15, ang: -0.65, len: 44, w: 20 },
+                    { x: 2, y: -15, ang: 0.65, len: 44, w: 20 },
+                    { x: 1, y: 20, ang: -0.8, len: 36, w: 17 },
+                    { x: 1, y: 20, ang: 0.8, len: 36, w: 17 }
+                ];
+
+                leaves.forEach(lf => {
+                    ctx.save();
+                    ctx.translate(lf.x, lf.y);
+                    ctx.rotate(lf.ang);
+
+                    // 叶片外轮廓
+                    ctx.beginPath();
+                    ctx.moveTo(0, 0);
+                    ctx.bezierCurveTo(-lf.w, -lf.len * 0.35, -lf.w * 0.7, -lf.len * 0.8, 0, -lf.len);
+                    ctx.bezierCurveTo(lf.w * 0.7, -lf.len * 0.8, lf.w, -lf.len * 0.35, 0, 0);
+                    ctx.stroke();
+
+                    // 主叶脉与侧叶脉
+                    ctx.beginPath();
+                    ctx.moveTo(0, 0);
+                    ctx.lineTo(0, -lf.len * 0.9);
+                    for (let v = 1; v <= 3; v++) {
+                        const vy = -lf.len * (0.22 * v);
+                        ctx.moveTo(0, vy);
+                        ctx.lineTo(-lf.w * 0.45, vy - 7);
+                        ctx.moveTo(0, vy);
+                        ctx.lineTo(lf.w * 0.45, vy - 7);
+                    }
+                    ctx.stroke();
+                    ctx.restore();
+                });
+
+                ctx.restore();
+            });
+
+            ctx.restore();
+        }
+
+        // 绘制木手掌底座、木纹质感与螺丝空孔
+        function drawWoodenBase() {
+            const config = getLevelConfig(currentLevelIndex);
+            ctx.save();
+
+            // 1. 底部立体投影
+            ctx.save();
+            ctx.shadowColor = 'rgba(20, 30, 24, 0.55)';
+            ctx.shadowBlur = 18;
+            ctx.shadowOffsetX = 4;
+            ctx.shadowOffsetY = 10;
+            config.drawBaseSilhoutte(ctx);
+            ctx.fillStyle = '#a3664f';
+            ctx.fill();
+            ctx.restore();
+
+            // 2. 裁剪手掌区域并填充温暖胡桃木色与斜向木纹
+            ctx.save();
+            config.drawBaseSilhoutte(ctx);
+            ctx.clip();
+
+            const woodGrad = ctx.createLinearGradient(80, 200, 380, 640);
+            woodGrad.addColorStop(0, '#dfa58b');
+            woodGrad.addColorStop(0.5, '#c9896e');
+            woodGrad.addColorStop(1, '#b57459');
+            ctx.fillStyle = woodGrad;
+            ctx.fillRect(50, 180, 420, 480);
+
+            // 细腻斜向木纹纹理
+            ctx.strokeStyle = 'rgba(120, 62, 40, 0.16)';
+            ctx.lineWidth = 1.5;
+            for (let i = -200; i < 600; i += 7) {
+                ctx.beginPath();
+                ctx.moveTo(60, 200 + i);
+                ctx.bezierCurveTo(180, 180 + i + Math.sin(i * 0.05) * 10, 310, 160 + i, 440, 120 + i);
+                ctx.stroke();
+            }
+            ctx.restore();
+
+            // 3. 手掌深褐色手绘描边与内高光
+            config.drawBaseSilhoutte(ctx);
+            ctx.lineWidth = 5;
+            ctx.strokeStyle = '#47241a';
+            ctx.stroke();
+
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = '#f0c6b3';
+            ctx.stroke();
+
+            // 4. 绘制木板上的螺丝孔洞 & 独立螺丝
+            baseHoles.forEach(h => {
+                // 深色内凹孔洞
+                ctx.beginPath();
+                ctx.arc(h.x, h.y, 9.5, 0, Math.PI * 2);
+                ctx.fillStyle = '#381b14';
+                ctx.fill();
+                ctx.lineWidth = 1.5;
+                ctx.strokeStyle = '#dca28a';
+                ctx.stroke();
+
+                // 孔洞内部半月形阴影增强立体感
+                ctx.beginPath();
+                ctx.arc(h.x + 1.5, h.y + 2, 7.5, 0, Math.PI * 2);
+                ctx.fillStyle = '#5c3124';
+                ctx.fill();
+
+                if (h.hasStandaloneScrew) {
+                    drawScrewHead(h.x, h.y, h.rot, 1.0);
+                }
+            });
+
+            ctx.restore();
+        }
+
+        // 绘制单颗十字螺丝 (1:1 复刻银紫光泽 + 十字凹槽)
+        function drawScrewHead(x, y, rot = 0, scale = 1.0) {
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.scale(scale, scale);
+            ctx.rotate(rot);
+
+            // 螺丝底部投影
+            ctx.beginPath();
+            ctx.arc(1, 2, 10.5, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(25, 12, 22, 0.45)';
+            ctx.fill();
+
+            // 螺丝金属圆头主体渐变
+            const grad = ctx.createRadialGradient(-3, -3, 1.5, 0, 0, 10);
+            grad.addColorStop(0, '#ffffff');
+            grad.addColorStop(0.45, '#dfd6f2');
+            grad.addColorStop(0.82, '#9e8fb8');
+            grad.addColorStop(1, '#5e4d75');
+
+            ctx.beginPath();
+            ctx.arc(0, 0, 10, 0, Math.PI * 2);
+            ctx.fillStyle = grad;
+            ctx.fill();
+
+            ctx.lineWidth = 1.8;
+            ctx.strokeStyle = '#2d192b';
+            ctx.stroke();
+
+            // 十字凹槽
+            ctx.strokeStyle = '#331d31';
+            ctx.lineWidth = 2.6;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.moveTo(-4.8, 0);
+            ctx.lineTo(4.8, 0);
+            ctx.moveTo(0, -4.8);
+            ctx.lineTo(0, 4.8);
+            ctx.stroke();
+
+            ctx.restore();
+        }
+
+        // 绘制单块紫银金属贴片（恢复第一版简洁干净的圆角多边形与原版紫银质感）
+        function drawMetalPlate(p, plateIdx = 0) {
+            if (p.state === 'gone') return;
+
+            ctx.save();
+            ctx.translate(p.x, p.y);
+            ctx.rotate(p.angle);
+
+            // 创建圆角多边形路径（第一版经典 7px 倒角圆弧连接）
+            const buildRoundedPoly = () => {
+                ctx.beginPath();
+                const pts = p.localPts;
+                const len = pts.length;
+                const radius = 7;
+
+                const mid0X = (pts[len - 1][0] + pts[0][0]) / 2;
+                const mid0Y = (pts[len - 1][1] + pts[0][1]) / 2;
+                ctx.moveTo(mid0X, mid0Y);
+
+                for (let i = 0; i < len; i++) {
+                    const p1 = pts[i];
+                    const p2 = pts[(i + 1) % len];
+                    ctx.arcTo(p1[0], p1[1], p2[0], p2[1], radius);
+                }
+                ctx.closePath();
+            };
+
+            // 1. 金属片投影
+            ctx.save();
+            buildRoundedPoly();
+            ctx.shadowColor = 'rgba(20, 12, 24, 0.55)';
+            ctx.shadowBlur = 9;
+            ctx.shadowOffsetX = 2;
+            ctx.shadowOffsetY = 5;
+            ctx.fillStyle = '#9b8cb8';
+            ctx.fill();
+            ctx.restore();
+
+            // 2. 紫银珠光渐变填充 (复刻第一版原图配色)
+            buildRoundedPoly();
+            const metalGrad = ctx.createLinearGradient(-35, -35, 35, 35);
+            metalGrad.addColorStop(0, '#f3effc');
+            metalGrad.addColorStop(0.45, '#d5cae8');
+            metalGrad.addColorStop(0.8, '#b8a8d4');
+            metalGrad.addColorStop(1, '#9888b5');
+            ctx.fillStyle = metalGrad;
+            ctx.fill();
+
+            // 3. 金属高光内边缘与漫画感深色描边
+            ctx.lineWidth = 4.2;
+            ctx.strokeStyle = p.jamFlash > 0 ? '#fbbf24' : '#341e30';
+            ctx.stroke();
+
+            ctx.lineWidth = 1.8;
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.75)';
+            ctx.stroke();
+
+            // 4. 金属片上的螺丝孔与未拆卸的十字螺丝
+            p.screws.forEach(s => {
+                if (s.removed) {
+                    // 螺丝拧走后金属片留下的圆孔
+                    ctx.beginPath();
+                    ctx.arc(s.localX, s.localY, 8.5, 0, Math.PI * 2);
+                    ctx.fillStyle = '#47241a';
+                    ctx.fill();
+                    ctx.lineWidth = 1.8;
+                    ctx.strokeStyle = '#341e30';
+                    ctx.stroke();
+                } else {
+                    drawScrewHead(s.localX, s.localY, s.rot, 1.0);
+                }
+            });
+
+            ctx.restore();
+        }
+
+        // 绘制从右下角伸入的立体螺丝刀（还原截图右下角特写）
+        function drawScrewdriver() {
+            // 默认待机在右下角边缘，点击螺丝时快速精准戳向目标螺丝
+            let targetX = 415;
+            let targetY = 665;
+            if (screwdriver.active && screwdriver.timer > 0) {
+                targetX = screwdriver.targetX;
+                targetY = screwdriver.targetY;
+                screwdriver.timer--;
+                screwdriver.spinAngle += 0.55;
+                if (screwdriver.timer <= 0) {
+                    screwdriver.active = false;
+                }
+            }
+
+            screwdriver.x += (targetX - screwdriver.x) * 0.32;
+            screwdriver.y += (targetY - screwdriver.y) * 0.32;
+
+            ctx.save();
+            ctx.translate(screwdriver.x, screwdriver.y);
+            ctx.rotate(-0.68); // 与原图一致的右下倾斜角
+
+            // 螺丝刀投影
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.38)';
+            ctx.shadowBlur = 14;
+            ctx.shadowOffsetX = -4;
+            ctx.shadowOffsetY = 8;
+
+            // 银白金属刀杆
+            const shaftGrad = ctx.createLinearGradient(-12, 0, 12, 0);
+            shaftGrad.addColorStop(0, '#9ca3af');
+            shaftGrad.addColorStop(0.45, '#f8fafc');
+            shaftGrad.addColorStop(0.7, '#cbd5e1');
+            shaftGrad.addColorStop(1, '#64748b');
+
+            ctx.beginPath();
+            ctx.moveTo(-4, 0);
+            ctx.lineTo(4, 0);
+            ctx.lineTo(13, 185);
+            ctx.lineTo(-13, 185);
+            ctx.closePath();
+            ctx.fillStyle = shaftGrad;
+            ctx.fill();
+
+            // 棕色木质握柄
+            const handleGrad = ctx.createLinearGradient(-32, 185, 32, 185);
+            handleGrad.addColorStop(0, '#5c341d');
+            handleGrad.addColorStop(0.38, '#a86844');
+            handleGrad.addColorStop(0.75, '#784426');
+            handleGrad.addColorStop(1, '#3d2010');
+
+            ctx.beginPath();
+            ctx.roundRect(-28, 180, 56, 170, 26);
+            ctx.fillStyle = handleGrad;
+            ctx.fill();
+
+            ctx.restore();
+        }
+
+        // 物理引擎步进更新（含子步进 SAT 多边形碰撞与下方金属片阻挡卡位）
+        function updatePhysics() {
+            const SUB_STEPS = 4; // 4次子步进确保高速下落的金属片绝不穿透下方未拆金属片
+            const GRAVITY = 0.46 / SUB_STEPS;
+
+            // 每帧先动态巡检：若下方支点金属块正在掉落远离，自动唤醒上方休眠的金属块继续自由落体
+            WakeUpUnsupportedPlates();
+
+            plates.forEach(p => {
+                if (p.bounceCooldown > 0) p.bounceCooldown--;
+            });
+
+            for (let step = 0; step < SUB_STEPS; step++) {
+                // 1. 积分更新金属片位置与单钉摆动状态
+                plates.forEach(p => {
+                    if (p.state === 'pivoting' && p.pivotScrew) {
+                        if (p.isSleeping) return; // 单钉摆动已静止
+
+                        const s = p.pivotScrew;
+                        const cos = Math.cos(p.angle);
+                        const sin = Math.sin(p.angle);
+                        const anchorX = s.x;
+                        const anchorY = s.y;
+
+                        // 重力对唯一剩余螺丝产生的旋转力矩
+                        const rx = -s.localX * cos + s.localY * sin;
+                        const torque = (rx * 0.0018) / SUB_STEPS;
+                        p.angularVel += torque;
+                        p.angularVel *= Math.pow(0.9, 1 / SUB_STEPS);
+                        p.angle += p.angularVel;
+
+                        const newCos = Math.cos(p.angle);
+                        const newSin = Math.sin(p.angle);
+                        p.x = anchorX - (s.localX * newCos - s.localY * newSin);
+                        p.y = anchorY - (s.localX * newSin + s.localY * newCos);
+
+                        // 当摆动幅度极小时自动静止
+                        if (Math.abs(p.angularVel) < 0.00025 && Math.abs(rx) < 1.2) {
+                            p.angularVel = 0;
+                        }
+                    } else if (p.state === 'falling') {
+                        // 如果该金属片已弹跳满2次并处于静止休眠状态，则完全冻结不移动
+                        if (p.isSleeping) {
+                            p.vx = 0;
+                            p.vy = 0;
+                            p.angularVel = 0;
+                            return;
+                        }
+
+                        p.vy += GRAVITY;
+                        // 空气阻力与最大速度限制
+                        p.vx *= Math.pow(0.99, 1 / SUB_STEPS);
+                        p.vy = Math.min(p.vy, 11 / SUB_STEPS);
+                        p.angularVel *= Math.pow(0.95, 1 / SUB_STEPS);
+
+                        p.x += p.vx;
+                        p.y += p.vy;
+                        p.angle += p.angularVel;
+                    }
+                });
+
+                // 2. 缓存所有在场金属片的世界多边形顶点
+                const worldPolys = new Map();
+                plates.forEach(p => {
+                    if (p.state !== 'gone') {
+                        worldPolys.set(p.id, getWorldPolygon(p));
+                    }
+                });
+
+                // 3. 检测金属片之间的多边形碰撞与阻挡 (下方未拆金属片或已休眠金属片卡住上方掉落金属片)
+                for (let i = 0; i < plates.length; i++) {
+                    const pA = plates[i];
+                    if (pA.state === 'gone') continue;
+
+                    for (let j = i + 1; j < plates.length; j++) {
+                        const pB = plates[j];
+                        if (pB.state === 'gone') continue;
+
+                        const aStatic = pA.state === 'pinned' || (pA.state === 'falling' && pA.isSleeping) || (pA.state === 'pivoting' && pA.isSleeping);
+                        const bStatic = pB.state === 'pinned' || (pB.state === 'falling' && pB.isSleeping) || (pB.state === 'pivoting' && pB.isSleeping);
+
+                        // 两块都是静止/固定状态则无需碰撞响应
+                        if (aStatic && bStatic) continue;
+
+                        const polyA = worldPolys.get(pA.id);
+                        const polyB = worldPolys.get(pB.id);
+                        const col = detectPolygonCollision(polyA, polyB);
+                        if (!col) continue;
+
+                        // 确保分离向量指向从 B 推开 A 的方向
+                        let nx = col.axis.x;
+                        let ny = col.axis.y;
+                        const dirX = pA.x - pB.x;
+                        const dirY = pA.y - pB.y;
+                        if (dirX * nx + dirY * ny < 0) {
+                            nx = -nx;
+                            ny = -ny;
+                        }
+
+                        const overlap = col.overlap;
+
+                        // 情况 A：pA 正在掉落（未休眠），撞上固定/悬挂/已休眠静止的 pB
+                        if (pA.state === 'falling' && !pA.isSleeping && (pB.state === 'pinned' || pB.state === 'pivoting' || pB.isSleeping)) {
+                            // 仅当障碍物 pB 位于掉落金属块 pA 的下方（或斜下方）时才触发阻挡，允许底层外层叠压块顺畅向下滑脱而不被上方块挂住
+                            if (pB.y > pA.y - 8 || ny < -0.15) {
+                                resolveFallingAgainstObstacle(pA, pB, nx, ny, overlap, step === 0);
+                                worldPolys.set(pA.id, getWorldPolygon(pA));
+                            }
+                        }
+                        // 情况 B：pB 正在掉落（未休眠），撞上固定/悬挂/已休眠静止的 pA
+                        else if (pB.state === 'falling' && !pB.isSleeping && (pA.state === 'pinned' || pA.state === 'pivoting' || pA.isSleeping)) {
+                            if (pA.y > pB.y - 8 || -ny < -0.15) {
+                                resolveFallingAgainstObstacle(pB, pA, -nx, -ny, overlap, step === 0);
+                                worldPolys.set(pB.id, getWorldPolygon(pB));
+                            }
+                        }
+                        // 情况 C：两块都在自由下落且都未休眠（上方金属片追尾下方金属片）
+                        else if (pA.state === 'falling' && !pA.isSleeping && pB.state === 'falling' && !pB.isSleeping) {
+                            // 若下方那块已经被卡住，则把下方那块视作支撑物来触发上方金属块的2次弹跳与休眠
+                            if (pB.isJammed && pA.y < pB.y) {
+                                resolveFallingAgainstObstacle(pA, pB, nx, ny, overlap, step === 0);
+                            } else if (pA.isJammed && pB.y < pA.y) {
+                                resolveFallingAgainstObstacle(pB, pA, -nx, -ny, overlap, step === 0);
+                            } else {
+                                pA.x += nx * overlap * 0.5;
+                                pA.y += ny * overlap * 0.5;
+                                pB.x -= nx * overlap * 0.5;
+                                pB.y -= ny * overlap * 0.5;
+
+                                const rvx = pA.vx - pB.vx;
+                                const rvy = pA.vy - pB.vy;
+                                const velAlongNormal = rvx * nx + rvy * ny;
+                                if (velAlongNormal < 0) {
+                                    const jImpulse = -(1 + 0.15) * velAlongNormal * 0.5;
+                                    pA.vx += jImpulse * nx;
+                                    pA.vy += jImpulse * ny;
+                                    pB.vx -= jImpulse * nx;
+                                    pB.vy -= jImpulse * ny;
+                                }
+                            }
+                            worldPolys.set(pA.id, getWorldPolygon(pA));
+                            worldPolys.set(pB.id, getWorldPolygon(pB));
+                        }
+                        // 情况 D：单颗螺丝悬挂摆动的金属片撞到旁边固定金属片，弹2下后静止
+                        else if (pA.state === 'pivoting' || pB.state === 'pivoting') {
+                            if (pA.state === 'pivoting' && !pA.isSleeping) {
+                                pA.angle -= pA.angularVel * 1.1;
+                                pA.pivotHitCount = (pA.pivotHitCount || 0) + 1;
+                                if (pA.pivotHitCount >= 2) {
+                                    pA.angularVel = 0;
+                                    pA.isSleeping = true;
+                                } else {
+                                    pA.angularVel *= -0.28;
+                                }
+                                worldPolys.set(pA.id, getWorldPolygon(pA));
+                            }
+                            if (pB.state === 'pivoting' && !pB.isSleeping) {
+                                pB.angle -= pB.angularVel * 1.1;
+                                pB.pivotHitCount = (pB.pivotHitCount || 0) + 1;
+                                if (pB.pivotHitCount >= 2) {
+                                    pB.angularVel = 0;
+                                    pB.isSleeping = true;
+                                } else {
+                                    pB.angularVel *= -0.28;
+                                }
+                                worldPolys.set(pB.id, getWorldPolygon(pB));
+                            }
+                        }
+                    }
+
+                    // 4. 检测掉落中的金属片是否被木板上的独立未拆螺丝挡住
+                    if (pA.state === 'falling' && !pA.isSleeping) {
+                        const polyA = worldPolys.get(pA.id);
+                        baseHoles.forEach(h => {
+                            if (!h.hasStandaloneScrew || pA.isSleeping) return;
+                            const scCol = detectPolygonCircleCollision(polyA, h.x, h.y, 13.5);
+                            if (scCol) {
+                                resolveFallingAgainstObstacle(
+                                    pA,
+                                    { x: h.x, y: h.y, state: 'pinned', angularVel: 0 },
+                                    scCol.axis.x,
+                                    scCol.axis.y,
+                                    scCol.overlap,
+                                    step === 0
+                                );
+                                worldPolys.set(pA.id, getWorldPolygon(pA));
+                            }
+                        });
+                    }
+                }
+            }
+
+            // 5. 检查完全掉出屏幕底部边界的金属片：只有此时才重置点击次数回 2/2！
+            let exitedPlate = null;
+            plates.forEach(p => {
+                if (p.jamFlash > 0) p.jamFlash--;
+                if (p.state === 'falling') {
+                    // 计算金属片在屏幕像素坐标系下的最低位置，当整块金属片完全离开屏幕下边缘时判定掉出
+                    const poly = getWorldPolygon(p);
+                    const screenMinY = poly.minY * viewScale + offsetY;
+                    if (screenMinY > canvas.height + 20 || p.y > DESIGN_H + 95) {
+                        p.state = 'gone';
+                        exitedPlate = p;
+                    }
+                }
+            });
+
+            if (exitedPlate) {
+                sound.playMetalDrop();
+                resetClickQuota(exitedPlate.x, DESIGN_H - 95, '+重置为 2/2 次!');
+                updateProgressUI();
+            } else {
+                // 如果刚才还在下落等待中、现在所有下落块都已经静止卡住，刷新 UI 提示状态
+                const waitingBadge = document.getElementById('fallingWaitBadge');
+                if (waitingBadge && !waitingBadge.classList.contains('hidden') && !hasActivelyFallingPlate()) {
+                    updateClickQuotaUI(false);
+                }
+            }
+
+            // 6. 更新飞出的螺丝粒子
+            for (let i = detachedScrews.length - 1; i >= 0; i--) {
+                const ds = detachedScrews[i];
+                ds.vy += 0.45;
+                ds.x += ds.vx;
+                ds.y += ds.vy;
+                ds.rot += ds.vRot;
+                ds.scale += 0.015;
+                ds.alpha -= 0.025;
+                if (ds.alpha <= 0) detachedScrews.splice(i, 1);
+            }
+
+            // 7. 更新火花粒子
+            for (let i = sparkles.length - 1; i >= 0; i--) {
+                const sp = sparkles[i];
+                sp.x += sp.vx;
+                sp.y += sp.vy;
+                sp.alpha -= 0.045;
+                if (sp.alpha <= 0) sparkles.splice(i, 1);
+            }
+
+            // 8. 更新画面浮动提示文字
+            for (let i = floatingTexts.length - 1; i >= 0; i--) {
+                const ft = floatingTexts[i];
+                ft.y += ft.vy;
+                ft.alpha -= 0.022;
+                if (ft.alpha <= 0) floatingTexts.splice(i, 1);
+            }
+        }
+
+        // 处理下落金属片撞击下方障碍物：支持自由落体撞击后【顺着障碍物斜面角度自然旋转滑落】，若被平底/凹槽彻底卡死则在弹跳2下后静止
+        function resolveFallingAgainstObstacle(fallingPlate, obstacle, nx, ny, overlap, allowSound) {
+            // 1. 将下落金属片沿法线推出障碍物多边形外部，消除穿模
+            fallingPlate.x += nx * overlap * 1.02;
+            fallingPlate.y += ny * overlap * 1.02;
+
+            // 计算法向相对速度 (vn < 0 表示正在朝障碍物表面撞击或挤压)
+            const vn = fallingPlate.vx * nx + fallingPlate.vy * ny;
+            if (vn >= 0) return;
+
+            const impactSpeed = Math.abs(vn);
+
+            // 2. 计算障碍物接触面的切线方向 (始终取朝向下方的滑落切线向量 tx, ty，使得 ty >= 0)
+            let tx = -ny;
+            let ty = nx;
+            if (ty < 0) {
+                tx = -tx;
+                ty = -ty;
+            } else if (Math.abs(ty) < 0.001) {
+                // 如果接触面接近纯水平，根据金属片质心相对于障碍物中心的左右偏心位置决定向哪一侧倾斜滑落
+                const offsetDir = fallingPlate.x >= obstacle.x ? 1 : -1;
+                tx = offsetDir;
+                ty = 0.08;
+                const len = Math.hypot(tx, ty);
+                tx /= len;
+                ty /= len;
+            }
+
+            // 当前速度在斜面切线方向上的分量
+            const vt = fallingPlate.vx * tx + fallingPlate.vy * ty;
+            // 斜面陡峭程度 (ty 越大说明斜面越陡，越容易顺着斜面加速滑落；abs(nx) 即 sin(斜面倾角))
+            const slopeSteepness = Math.abs(nx);
+            // 质心偏离支撑中心的水平力臂（偏心越大，越容易翻滚滑落）
+            const leverArmX = fallingPlate.x - obstacle.x;
+
+            // 3. 碰撞音效与火花反馈（带冷却防抖）
+            if (fallingPlate.bounceCooldown <= 0 && impactSpeed > 0.45) {
+                fallingPlate.bounceCount = (fallingPlate.bounceCount || 0) + 1;
+                fallingPlate.bounceCooldown = 6;
+
+                if (allowSound) {
+                    sound.playMetalClank(Math.min(1.2, Math.max(0.4, impactSpeed * 0.6)));
+                }
+                fallingPlate.jamFlash = 4;
+
+                const sparkX = (fallingPlate.x + obstacle.x) * 0.5;
+                const sparkY = (fallingPlate.y + obstacle.y) * 0.5;
+                for (let k = 0; k < 3; k++) {
+                    sparkles.push({
+                        x: sparkX + (Math.random() - 0.5) * 14,
+                        y: sparkY + (Math.random() - 0.5) * 14,
+                        vx: tx * (1.2 + Math.random() * 1.8) + (Math.random() - 0.5),
+                        vy: -Math.random() * 1.8,
+                        r: 1.8,
+                        alpha: 0.9,
+                        color: '#fde68a'
+                    });
+                }
+            }
+
+            // 4. 判断接触面性质：是【陡峭/斜切面滑落】还是【平底/凹槽托举】
+            const isSlopedSurface = slopeSteepness > 0.20 || Math.abs(leverArmX) > 26;
+
+            if (isSlopedSurface) {
+                // 顺着斜面角度自然滑落：保留切向速度并施加沿斜面向下的重力滑落分量
+                fallingPlate.isJammed = false;
+                fallingPlate.settleFrames = 0;
+
+                // 首次撞击斜面时带一点轻微法向弹跳，随后紧贴斜面顺畅滑下
+                const normalRestitution = fallingPlate.bounceCount <= 1 ? 0.18 : 0.02;
+                const newVn = -vn * normalRestitution;
+
+                // 沿切线方向叠加下滑加速度（斜面越陡、偏心越大，滑落越快）
+                const slideAccel = (0.22 * ty) + (Math.abs(leverArmX) > 22 ? 0.14 : 0.05);
+                const newVt = Math.max(0, vt * 0.96) + slideAccel;
+
+                fallingPlate.vx = nx * newVn + tx * newVt;
+                fallingPlate.vy = ny * newVn + ty * newVt;
+
+                // 赋予顺着斜面滚落的角速度，使金属块呈现逼真的顺坡倾倒滑落姿态
+                const slideDir = tx >= 0 ? 1 : -1;
+                const targetAngVel = slideDir * (0.012 + slopeSteepness * 0.028);
+                fallingPlate.angularVel = fallingPlate.angularVel * 0.75 + targetAngVel * 0.25;
+                return;
+            }
+
+            // 5. 若遇到较为平坦的顶部阻挡或双侧凹槽夹击（无法侧滑脱出）：执行最多2次弹跳后休眠静止
+            fallingPlate.isJammed = true;
+            if (fallingPlate.bounceCount === 1) {
+                // 第 1 下轻微弹跳 + 顺斜面微滑尝试脱困
+                const bounceSpeed = Math.min(1.8, Math.max(0.9, impactSpeed * 0.45));
+                fallingPlate.vx = tx * (vt * 0.6 + (leverArmX >= 0 ? 0.35 : -0.35)) + nx * bounceSpeed;
+                fallingPlate.vy = ty * (vt * 0.6) + ny * bounceSpeed;
+                fallingPlate.angularVel = (leverArmX >= 0 ? 1 : -1) * 0.008;
+            } else if (fallingPlate.bounceCount === 2) {
+                // 第 2 下极小弹跳
+                const bounceSpeed = Math.min(0.85, Math.max(0.4, impactSpeed * 0.25));
+                fallingPlate.vx = tx * (vt * 0.3) + nx * bounceSpeed;
+                fallingPlate.vy = ty * (vt * 0.3) + ny * bounceSpeed;
+                fallingPlate.angularVel *= 0.25;
+            } else {
+                // 如果滑移速度仍然明显（说明正在缓慢滑出边缘），允许继续滑落；否则彻底静止休眠
+                const currentSlideSpeed = Math.hypot(fallingPlate.vx, fallingPlate.vy);
+                fallingPlate.settleFrames = (fallingPlate.settleFrames || 0) + 1;
+                if (currentSlideSpeed < 0.65 || fallingPlate.settleFrames > 8) {
+                    fallingPlate.vx = 0;
+                    fallingPlate.vy = 0;
+                    fallingPlate.angularVel = 0;
+                    fallingPlate.isSleeping = true;
+                } else {
+                    fallingPlate.vx = tx * vt * 0.85;
+                    fallingPlate.vy = ty * vt * 0.85;
+                }
+            }
+        }
+
+        // 主渲染循环
+        function renderLoop() {
+            updatePhysics();
+
+            // 1. 绘制背景
+            drawBotanicalBackground();
+
+            ctx.save();
+            ctx.translate(offsetX, offsetY);
+            ctx.scale(viewScale, viewScale);
+
+            // 2. 绘制木手掌底座
+            drawWoodenBase();
+
+            // 3. 先绘制固定态与悬挂态金属片（按异形层叠顺序渲染以展现上下遮挡压边效果），再绘制正在掉落的金属片
+            plates.forEach((p, idx) => {
+                if (p.state === 'pinned' || p.state === 'pivoting') drawMetalPlate(p, idx);
+            });
+            plates.forEach((p, idx) => {
+                if (p.state === 'falling') drawMetalPlate(p, idx);
+            });
+
+            // 4. 绘制飞出的十字螺丝动画
+            detachedScrews.forEach(ds => {
+                ctx.save();
+                ctx.globalAlpha = Math.max(0, ds.alpha);
+                drawScrewHead(ds.x, ds.y, ds.rot, ds.scale);
+                ctx.restore();
+            });
+
+            // 5. 绘制星光粒子
+            sparkles.forEach(sp => {
+                ctx.save();
+                ctx.globalAlpha = Math.max(0, sp.alpha);
+                ctx.fillStyle = sp.color;
+                ctx.beginPath();
+                ctx.arc(sp.x, sp.y, sp.r, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            });
+
+            // 5.5 绘制浮动次数重置提示文字
+            floatingTexts.forEach(ft => {
+                ctx.save();
+                ctx.globalAlpha = Math.max(0, ft.alpha);
+                ctx.font = '900 15px "Noto Sans SC", sans-serif';
+                ctx.textAlign = 'center';
+                ctx.lineWidth = 4;
+                ctx.strokeStyle = 'rgba(25, 38, 30, 0.85)';
+                ctx.strokeText(ft.text, ft.x, ft.y);
+                ctx.fillStyle = '#fde68a';
+                ctx.fillText(ft.text, ft.x, ft.y);
+                ctx.restore();
+            });
+
+            // 6. 绘制右下角 3D 螺丝刀
+            drawScrewdriver();
+
+            ctx.restore();
+            requestAnimationFrame(renderLoop);
+        }
+
+        // 自适应屏幕尺寸
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            const scaleX = canvas.width / DESIGN_W;
+            const scaleY = canvas.height / DESIGN_H;
+            viewScale = Math.min(scaleX, scaleY) * 0.96;
+            offsetX = (canvas.width - DESIGN_W * viewScale) / 2;
+            offsetY = (canvas.height - DESIGN_H * viewScale) / 2 + 12;
+        }
+
+        // 事件绑定
+        window.addEventListener('resize', resizeCanvas);
+        canvas.addEventListener('pointerdown', (e) => {
+            e.preventDefault();
+            handlePointerDown(e.clientX, e.clientY);
+        });
+
+        // 关卡切换按钮
+        document.querySelectorAll('.level-tab').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const lv = parseInt(btn.getAttribute('data-level'), 10);
+                window.undoStack = [];
+                initLevel(lv);
+            });
+        });
+
+        // 重置按钮（顶部与底部第一个“重置”按钮同步绑定）
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            window.undoStack = [];
+            initLevel(currentLevelIndex);
+        });
+        document.getElementById('bottomResetBtn').addEventListener('click', () => {
+            window.undoStack = [];
+            initLevel(currentLevelIndex);
+        });
+
+        // 底部第二个按钮：“撤销上一步”
+        document.getElementById('bottomUndoBtn').addEventListener('click', () => {
+            undoLastAction();
+        });
+
+        // 音效开关按钮
+        document.getElementById('soundBtn').addEventListener('click', () => {
+            sound.enabled = !sound.enabled;
+            document.getElementById('soundOnIcon').classList.toggle('hidden', !sound.enabled);
+            document.getElementById('soundOffIcon').classList.toggle('hidden', sound.enabled);
+        });
+
+        // 通关弹窗按钮
+        document.getElementById('replayLevelBtn').addEventListener('click', () => {
+            initLevel(currentLevelIndex);
+        });
+        document.getElementById('nextLevelBtn').addEventListener('click', () => {
+            initLevel((currentLevelIndex + 1) % 3);
+        });
+
+        // APK 打包教程弹窗控制
+        const apkModal = document.getElementById('apkModal');
+        document.getElementById('apkGuideBtn').addEventListener('click', () => {
+            // 原生APK模式默认不弹出导出框
+        });
+        document.getElementById('closeApkModal').addEventListener('click', () => {
+            apkModal.classList.add('hidden');
+        });
+        document.getElementById('closeApkModalBtn').addEventListener('click', () => {
+            apkModal.classList.add('hidden');
+        });
+
+        // 获取纯净版游戏 index.html 字符串（移除导出弹窗默认弹出）
+        function getCleanStandaloneHtml() {
+            const cloneDoc = document.documentElement.cloneNode(true);
+            const modalInClone = cloneDoc.querySelector('#apkModal');
+            if (modalInClone) modalInClone.classList.add('hidden');
+            const winModalInClone = cloneDoc.querySelector('#winModal');
+            if (winModalInClone) winModalInClone.classList.add('hidden', 'opacity-0');
+            // 在原生 APK 内运行时隐藏右上角“导出Android工程”按钮，使界面更纯粹
+            const apkGuideBtnInClone = cloneDoc.querySelector('#apkGuideBtn');
+            if (apkGuideBtnInClone) apkGuideBtnInClone.style.display = 'none';
+
+            let rawHtml = '<!DOCTYPE html>\n' + cloneDoc.outerHTML;
+            rawHtml = rawHtml.replace("apkModal.classList.remove('hidden');", "// 原生APK模式默认不弹出导出框");
+            return rawHtml;
+        }
+
+        // 一键下载独立 index.html 游戏文件功能
+        function downloadStandaloneGameFile() {
+            const htmlContent = getCleanStandaloneHtml();
+            const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'index.html';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // 一键生成并下载可在 GitHub Actions 直接编译的 Android 原生工程包 (.zip)
+        async function buildAndDownloadAndroidProjectZip(btnEl) {
+            if (typeof JSZip === 'undefined') {
+                floatingTexts.push({ x: 250, y: 400, text: '正在加载打包组件，请稍后重试', alpha: 1, vy: -1 });
+                return;
+            }
+            const origHtml = btnEl.innerHTML;
+            btnEl.innerHTML = '<span>⏳ 正在打包 Android 原生工程...</span>';
+
+            try {
+                const zip = new JSZip();
+                const gameHtml = getCleanStandaloneHtml();
+
+                // 1. .github/workflows/build-apk.yml (支持 Push 自动使用 Gradle 8.7 编译 Debug 与签名版 Release APK)
+                const githubWorkflowYml = `name: Build Android APK
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Gradle 8.7
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: '8.7'
+
+      - name: Build Debug & Release APK
+        run: gradle assembleDebug assembleRelease --no-daemon
+
+      - name: Upload Debug APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ScrewPuzzle-debug-apk
+          path: app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Upload Release APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ScrewPuzzle-release-apk
+          path: app/build/outputs/apk/release/*.apk
+`;
+                zip.file('.github/workflows/build-apk.yml', githubWorkflowYml);
+
+                // 2. settings.gradle
+                const settingsGradle = `pluginManagement {
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+rootProject.name = "ScrewPuzzleWorkshop"
+include ':app'
+`;
+                zip.file('settings.gradle', settingsGradle);
+
+                // 3. 根项目 build.gradle
+                const rootBuildGradle = `plugins {
+    id 'com.android.application' version '8.2.2' apply false
+}
+`;
+                zip.file('build.gradle', rootBuildGradle);
+
+                // 4. gradle.properties
+                const gradleProperties = `org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8
+android.useAndroidX=true
+android.nonTransitiveRClass=true
+`;
+                zip.file('gradle.properties', gradleProperties);
+
+                // 5. .gitignore
+                const gitignore = `.gradle/
+build/
+app/build/
+local.properties
+.idea/
+*.iml
+.DS_Store
+`;
+                zip.file('.gitignore', gitignore);
+
+                // 6. app/build.gradle (内置 Debug 签名配置使 Release 包在 GitHub Actions 中也能直接生成已签名可安装的 APK)
+                const appBuildGradle = `plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.workshop.screwpuzzle'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "com.workshop.screwpuzzle"
+        minSdk 24
+        targetSdk 34
+        versionCode 1
+        versionName "1.0.0"
+    }
+
+    buildTypes {
+        release {
+            // 默认使用 debug 签名密钥以便在 GitHub Actions 直接产出可安装手机的 Release APK
+            signingConfig signingConfigs.debug
+            minifyEnabled false
+            shrinkResources false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            applicationIdSuffix ".debug"
+            versionNameSuffix "-debug"
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'androidx.webkit:webkit:1.10.0'
+}
+`;
+                zip.file('app/build.gradle', appBuildGradle);
+                zip.file('app/proguard-rules.pro', '# Keep WebView JS Interface\n-keepattributes *Annotation*\n-keepclassmembers class * {\n    @android.webkit.JavascriptInterface <methods>;\n}\n');
+
+                // 7. app/src/main/AndroidManifest.xml
+                const androidManifest = `<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.workshop.screwpuzzle">
+
+    <!-- 允许加载 Tailwind 样式与网络资源 -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <application
+        android:allowBackup="true"
+        android:hardwareAccelerated="true"
+        android:icon="@drawable/ic_launcher"
+        android:roundIcon="@drawable/ic_launcher"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:usesCleartextTraffic="true"
+        android:theme="@style/Theme.AppCompat.NoActionBar">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            android:configChanges="orientation|screenSize|keyboardHidden">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+
+</manifest>
+`;
+                zip.file('app/src/main/AndroidManifest.xml', androidManifest);
+
+                // 8. app/src/main/java/com/workshop/screwpuzzle/MainActivity.java
+                const mainActivityJava = `package com.workshop.screwpuzzle;
+
+import android.annotation.SuppressLint;
+import android.graphics.Color;
+import android.os.Build;
+import android.os.Bundle;
+import android.view.View;
+import android.view.Window;
+import android.view.WindowInsets;
+import android.view.WindowInsetsController;
+import android.view.WindowManager;
+import android.webkit.WebChromeClient;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
+import androidx.appcompat.app.AppCompatActivity;
+
+public class MainActivity extends AppCompatActivity {
+
+    private WebView gameWebView;
+
+    @SuppressLint("SetJavaScriptEnabled")
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        // 配置沉浸式全屏游戏体验
+        hideSystemUI();
+
+        gameWebView = new WebView(this);
+        gameWebView.setBackgroundColor(Color.parseColor("#678772"));
+        setContentView(gameWebView);
+
+        WebSettings settings = gameWebView.getSettings();
+        settings.setJavaScriptEnabled(true);
+        settings.setDomStorageEnabled(true);
+        settings.setDatabaseEnabled(true);
+        settings.setAllowFileAccess(true);
+        settings.setAllowContentAccess(true);
+        settings.setMediaPlaybackRequiresUserGesture(false); // 允许 WebAudio 拧螺丝音效直接播放
+        settings.setCacheMode(WebSettings.LOAD_DEFAULT);
+        settings.setUseWideViewPort(true);
+        settings.setLoadWithOverviewMode(true);
+        settings.setSupportZoom(false);
+
+        gameWebView.setWebViewClient(new WebViewClient());
+        gameWebView.setWebChromeClient(new WebChromeClient());
+
+        // 加载内置在 assets 目录中的完整《拧螺丝解压工坊》游戏
+        gameWebView.loadUrl("file:///android_asset/index.html");
+    }
+
+    private void hideSystemUI() {
+        Window window = getWindow();
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            window.setDecorFitsSystemWindows(false);
+            WindowInsetsController controller = window.getInsetsController();
+            if (controller != null) {
+                controller.hide(WindowInsets.Type.statusBars() | WindowInsets.Type.navigationBars());
+                controller.setSystemBarsBehavior(WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+            }
+        } else {
+            window.getDecorView().setSystemUiVisibility(
+                    View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                    | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                    | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                    | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                    | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                    | View.SYSTEM_UI_FLAG_FULLSCREEN
+            );
+        }
+    }
+
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        if (hasFocus) {
+            hideSystemUI();
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (gameWebView != null) {
+            gameWebView.onPause();
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (gameWebView != null) {
+            gameWebView.onResume();
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (gameWebView != null) {
+            gameWebView.destroy();
+        }
+        super.onDestroy();
+    }
+}
+`;
+                zip.file('app/src/main/java/com/workshop/screwpuzzle/MainActivity.java', mainActivityJava);
+
+                // 9. 资源文件 (strings.xml & 矢量游戏图标 ic_launcher.xml)
+                const stringsXml = `<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">拧螺丝工坊</string>
+</resources>
+`;
+                zip.file('app/src/main/res/values/strings.xml', stringsXml);
+
+                const icLauncherXml = `<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- 鼠尾草绿背景底板 -->
+    <path
+        android:fillColor="#678772"
+        android:pathData="M0,0h108v108h-108z" />
+    <!-- 紫银金属贴片外框 -->
+    <path
+        android:fillColor="#D5CAE8"
+        android:strokeColor="#341E30"
+        android:strokeWidth="4"
+        android:pathData="M24,24 L84,24 Q90,24 90,30 L90,78 Q90,84 84,84 L24,84 Q18,84 18,78 L18,30 Q18,24 24,24 Z" />
+    <!-- 中心十字螺丝圆头 -->
+    <path
+        android:fillColor="#EFEBF9"
+        android:strokeColor="#2D192B"
+        android:strokeWidth="3.5"
+        android:pathData="M54,34 A20,20 0 1,1 53.9,34 Z" />
+    <!-- 十字螺丝凹槽 -->
+    <path
+        android:strokeColor="#331D31"
+        android:strokeWidth="5"
+        android:strokeLineCap="round"
+        android:pathData="M43,54 L65,54 M54,43 L54,65" />
+</vector>
+`;
+                zip.file('app/src/main/res/drawable/ic_launcher.xml', icLauncherXml);
+
+                // 10. 将当前完整的《拧螺丝解压工坊》游戏写入 app/src/main/assets/index.html
+                zip.file('app/src/main/assets/index.html', gameHtml);
+
+                // 11. 编写详细的 GitHub 云编译与本地 Android Studio 编译说明 README.md
+                const readmeMd = `# 拧螺丝解压工坊 (Screw Puzzle Workshop) - Android 原生工程
+
+本项目是由《拧螺丝解压工坊》自动生成的完整 Android 原生工程包，内置 **GitHub Actions 云端自动编译 APK 工作流**。
+
+## 🚀 方法一：使用 GitHub 仓库免费自动编译 APK（无需本地配置环境）
+
+1. 在 GitHub 上新建一个仓库（公开或私有均可）。
+2. 将本压缩包解压后的所有文件（注意包含隐藏文件夹 \`.github/workflows/build-apk.yml\`）上传并推送 (Push) 到 GitHub 仓库的 \`main\` 或 \`master\` 分支。
+3. 打开 GitHub 仓库顶部的 **Actions** 选项卡，会自动触发 \`Build Android APK\` 构建任务。
+4. 等待约 1~2 分钟构建变绿完成后，点进该次运行记录底部的 **Artifacts** 区域，即可直接下载：
+   - \`ScrewPuzzle-debug-apk\`（内含可直接安装的 \`app-debug.apk\`）
+   - \`ScrewPuzzle-release-apk\`（内含已签名的 \`app-release.apk\`）
+
+## 💻 方法二：使用本地 Android Studio 编译
+
+1. 打开 **Android Studio**（建议使用 Hedgehog / Iguana 或更新版本，JDK 17）。
+2. 选择 **Open**，打开解压后的工程根目录。
+3. 等待 Gradle 同步完成后，点击顶部菜单 **Build -> Build Bundle(s) / APK(s) -> Build APK(s)** 即可生成 APK。
+`;
+                zip.file('README.md', readmeMd);
+
+                // 生成压缩包并触发浏览器下载
+                const zipBlob = await zip.generateAsync({ type: 'blob' });
+                const url = URL.createObjectURL(zipBlob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'ScrewPuzzle-Android-GitHub.zip';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+
+                btnEl.innerHTML = '<span>✅ 已下载 ScrewPuzzle-Android-GitHub.zip！</span>';
+                setTimeout(() => { btnEl.innerHTML = origHtml; }, 3000);
+            } catch (err) {
+                console.error(err);
+                btnEl.innerHTML = '<span>❌ 打包失败，请重试</span>';
+                setTimeout(() => { btnEl.innerHTML = origHtml; }, 2500);
+            }
+        }
+
+        document.getElementById('downloadAndroidZipBtn').addEventListener('click', (e) => {
+            buildAndDownloadAndroidProjectZip(e.currentTarget);
+        });
+
+        document.getElementById('downloadHtmlBtn').addEventListener('click', (e) => {
+            downloadStandaloneGameFile();
+            const btn = e.currentTarget;
+            const origHtml = btn.innerHTML;
+            btn.innerHTML = '<span>✅ 已开始下载 index.html！</span>';
+            setTimeout(() => { btn.innerHTML = origHtml; }, 2500);
+        });
+
+        // 一键复制源码功能
+        document.getElementById('copySourceBtn').addEventListener('click', (e) => {
+            const tempInput = document.createElement('textarea');
+            tempInput.value = document.documentElement.outerHTML;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+            const btn = e.currentTarget;
+            const origText = btn.textContent;
+            btn.textContent = '✅ 已复制完整HTML源码！';
+            setTimeout(() => { btn.textContent = origText; }, 2000);
+        });
+
+        // 启动游戏
+        window.onload = () => {
+            resizeCanvas();
+            initLevel(0);
+            renderLoop();
+            // 自动弹出 APK 导出与下载窗口，方便您直接点击下载
+            apkModal.classList.remove('hidden');
+        };
+    </script>
+
+</body></html>

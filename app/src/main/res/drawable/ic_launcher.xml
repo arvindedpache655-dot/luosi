@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- 鼠尾草绿背景底板 -->
+    <path
+        android:fillColor="#678772"
+        android:pathData="M0,0h108v108h-108z" />
+    <!-- 紫银金属贴片外框 -->
+    <path
+        android:fillColor="#D5CAE8"
+        android:strokeColor="#341E30"
+        android:strokeWidth="4"
+        android:pathData="M24,24 L84,24 Q90,24 90,30 L90,78 Q90,84 84,84 L24,84 Q18,84 18,78 L18,30 Q18,24 24,24 Z" />
+    <!-- 中心十字螺丝圆头 -->
+    <path
+        android:fillColor="#EFEBF9"
+        android:strokeColor="#2D192B"
+        android:strokeWidth="3.5"
+        android:pathData="M54,34 A20,20 0 1,1 53.9,34 Z" />
+    <!-- 十字螺丝凹槽 -->
+    <path
+        android:strokeColor="#331D31"
+        android:strokeWidth="5"
+        android:strokeLineCap="round"
+        android:pathData="M43,54 L65,54 M54,43 L54,65" />
+</vector>
